@@ -1,6 +1,237 @@
 ---
-title: "My Projects"
-listing:
-  contents: projects
-  type: grid
+title: A/B Testing a Call to Action
+subtitle: "Simulating Key Ideas from Classical Frequentist Statistics"
+author: "Jihee"
+date: today
+jupyter: python3
 ---
+
+## Introduction
+
+Suppose we run a website that includes a newsletter sign-up feature on the homepage. To increase engagement, we want to test which of two call-to-action (CTA) messages leads to more sign-ups.
+
+CTA A reads “Sign up for our newsletter here!” while CTA B reads “Stay up to date by signing up!”. Although the difference in wording is small, it may influence user behavior.
+
+To evaluate which CTA performs better, we conduct an A/B test. In this experiment, visitors are randomly assigned to one of the two CTAs, and we compare the sign-up rates between the two groups. This randomized design allows us to isolate the effect of the CTA wording.
+
+---
+
+## The A/B Test as a Statistical Problem
+
+Each visitor either signs up (1) or does not (0), so we can model their behavior as a Bernoulli random variable. Let $\pi_A$ and $\pi_B$ represent the probability of signing up under each CTA.
+
+The quantity of interest is:
+
+$$
+\theta = \pi_A - \pi_B
+$$
+
+which measures the difference in sign-up rates between the two groups. We estimate this using the difference in sample means:
+
+$$
+\hat{\theta} = \bar{X}_A - \bar{X}_B
+$$
+
+---
+
+## Simulating Data
+
+In practice, we do not know the true values of $\pi_A$ and $\pi_B$. However, in this simulation, we assume:
+
+- $\pi_A = 0.22$
+- $\pi_B = 0.18$
+
+so the true difference is $\theta = 0.04$.
+
+```{python}
+import numpy as np
+
+np.random.seed(123)
+
+n = 1000
+pi_A = 0.22
+pi_B = 0.18
+
+A = np.random.binomial(1, pi_A, n)
+B = np.random.binomial(1, pi_B, n)
+
+theta_hat = A.mean() - B.mean()
+theta_hat
+```
+
+The estimated difference is close to the true value, but not exact due to sampling variability.
+
+---
+
+## The Law of Large Numbers
+
+The Law of Large Numbers tells us that as the sample size increases, the sample mean converges to the true population mean. In this context, it means our estimate $\hat{\theta}$ should get closer to $\theta$ as we observe more data.
+
+```{python}
+import matplotlib.pyplot as plt
+
+diff = A - B
+cum_avg = np.cumsum(diff) / np.arange(1, n+1)
+
+plt.plot(cum_avg)
+plt.axhline(0.04)
+plt.title("Convergence of the Estimate")
+plt.xlabel("Number of Observations")
+plt.ylabel("Estimate")
+plt.show()
+```
+
+At small sample sizes, the estimate fluctuates significantly. As more observations are included, the estimate stabilizes and approaches the true value of 0.04. This demonstrates why large samples are important in experiments.
+
+---
+
+## Bootstrap Standard Errors
+
+A point estimate alone is not sufficient—we also want to quantify uncertainty. The bootstrap provides a way to estimate the variability of our estimator by resampling the observed data.
+
+```{python}
+boot = []
+
+for i in range(1000):
+    A_star = np.random.choice(A, n, replace=True)
+    B_star = np.random.choice(B, n, replace=True)
+    boot.append(A_star.mean() - B_star.mean())
+
+boot_se = np.std(boot)
+```
+
+We compare this to the analytical standard error:
+
+```{python}
+pi_hat_A = A.mean()
+pi_hat_B = B.mean()
+
+se_formula = np.sqrt(
+    (pi_hat_A*(1-pi_hat_A)/n) +
+    (pi_hat_B*(1-pi_hat_B)/n)
+)
+
+boot_se, se_formula
+```
+
+Both values are very similar, which confirms that the bootstrap provides a reliable estimate of uncertainty.
+
+We can construct a 95% confidence interval:
+
+```{python}
+lower = theta_hat - 1.96*boot_se
+upper = theta_hat + 1.96*boot_se
+
+lower, upper
+```
+
+This interval represents a plausible range for the true difference in sign-up rates.
+
+---
+
+## The Central Limit Theorem
+
+The Central Limit Theorem states that the sampling distribution of the sample mean becomes approximately normal as the sample size increases.
+
+```{python}
+sizes = [25, 50, 100, 500]
+
+for s in sizes:
+    results = []
+    for i in range(1000):
+        A_sim = np.random.binomial(1, pi_A, s)
+        B_sim = np.random.binomial(1, pi_B, s)
+        results.append(A_sim.mean() - B_sim.mean())
+
+    plt.hist(results, bins=30)
+    plt.title(f"n = {s}")
+    plt.show()
+```
+
+For small samples, the distribution is irregular. As sample size increases, it becomes smoother and more bell-shaped, illustrating the CLT.
+
+---
+
+## Hypothesis Testing
+
+We test:
+
+- $H_0: \theta = 0$
+- $H_1: \theta \neq 0$
+
+```{python}
+from scipy.stats import norm
+
+z = theta_hat / se_formula
+p_value = 2 * (1 - norm.cdf(abs(z)))
+
+z, p_value
+```
+
+The p-value tells us how likely it is to observe a result this extreme if there were no true difference. A small value provides evidence against the null hypothesis.
+
+---
+
+## The T-Test as a Regression
+
+We can estimate the same effect using regression.
+
+```{python}
+import pandas as pd
+import statsmodels.api as sm
+
+Y = np.concatenate([A, B])
+D = np.concatenate([np.ones(n), np.zeros(n)])
+
+df = pd.DataFrame({"Y": Y, "D": D})
+
+X = sm.add_constant(df["D"])
+model = sm.OLS(df["Y"], X).fit()
+
+model.summary()
+```
+
+The coefficient on D represents the difference between groups. It matches the earlier estimate, showing that A/B testing can be analyzed using regression.
+
+---
+
+## The Problem with Peeking
+
+If we repeatedly check results during an experiment, we increase the chance of false positives.
+
+```{python}
+np.random.seed(123)
+
+false_pos = []
+
+for i in range(1000):
+    A_sim = np.random.binomial(1, 0.2, 1000)
+    B_sim = np.random.binomial(1, 0.2, 1000)
+
+    sig = False
+
+    for k in range(100, 1001, 100):
+        theta = A_sim[:k].mean() - B_sim[:k].mean()
+        se = np.sqrt((A_sim[:k].var()/k) + (B_sim[:k].var()/k))
+
+        if se > 0:
+            z = theta / se
+            p = 2 * (1 - norm.cdf(abs(z)))
+            if p < 0.05:
+                sig = True
+                break
+
+    false_pos.append(sig)
+
+np.mean(false_pos)
+```
+
+The false positive rate is much higher than 5%, demonstrating that peeking invalidates classical inference.
+
+---
+
+## Conclusion
+
+This exercise demonstrates how A/B testing connects to core ideas in frequentist statistics. The Law of Large Numbers explains why estimates stabilize, the bootstrap quantifies uncertainty, and the Central Limit Theorem justifies normal-based inference.
+
+At the same time, hypothesis testing and regression provide tools for decision-making, while the peeking example highlights the importance of proper experimental design. Together, these ideas form the foundation of modern data-driven decision making.

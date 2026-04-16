@@ -1,0 +1,6 @@
+#!/Users/jh/Desktop/ict/455/mgta455-tuango-rsm-jiy156/mgta455-cg-uplift-Group-34/quarto/quarto_website/.venv/bin/python
+import sys
+from jupyter_client.kernelapp import main
+if __name__ == '__main__':
+    sys.argv[0] = sys.argv[0].removesuffix('.exe')
+    sys.exit(main())

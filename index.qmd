@@ -1,15 +1,13 @@
 ---
-title: "Your Name"
+title: "Jihee Yoon"
 image: "files/profile_pic.jpg"
 about:
   template: jolla
   links:
     - icon: envelope
-      href: mailto:your_email@address.com
+      href: mailto:jiy156@ucsd.edu
     - icon: linkedin
-      href: https://www.linkedin.com/in/your_username
+      href: https://www.linkedin.com/in/jihee-chloe-yoon/
 ---
 
-Welcome to my website!
-
-I am a student interested in data analysis and programming.
+Hi 👋🏻 I'm a data analyst specializing in building data pipelines and developing business solutions. I have worked for top-tier tech companies and I am passionate about working with organizations that want to make effective use of their data 👩🏻‍💻

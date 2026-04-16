@@ -1,9 +1,8 @@
 ---
-title: "My First Project"
-author: "jh"
-date: today
+title: "Projects"
+listing:
+  contents: projects
+  type: grid
+  sort: "date desc"
+  fields: [title, subtitle, date]
 ---
-
-# Introduction
-
-This is my project.

@@ -4,5 +4,9 @@
     "items": [
       "/projects/project1/index.html"
     ]
+  },
+  {
+    "listing": "/projects/project1/index.html",
+    "items": []
   }
 ]
