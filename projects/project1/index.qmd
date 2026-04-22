@@ -1,8 +1,173 @@
 ---
-title: "Projects"
-listing:
-  contents: projects
-  type: grid
-  sort: "date desc"
-  fields: [title, subtitle, date]
+title: "A/B Testing a Call to Action"
+subtitle: "Simulating Key Ideas from Classical Frequentist Statistics"
+author: "Jihee Yoon"
+date: today
+categories: [A/B Testing, Statistics, Simulation]
+jupyter: python3
 ---
+
+## Introduction
+
+Suppose we run a website that includes a newsletter sign-up feature on the homepage. To increase engagement, we want to test which of two call-to-action (CTA) messages leads to more sign-ups.
+
+CTA A reads “Sign up for our newsletter here!” while CTA B reads “Stay up to date by signing up!”. Although the difference in wording is small, it may influence user behavior.
+
+To evaluate which CTA performs better, we conduct an A/B test. Visitors are randomly assigned to one of the two CTAs, and we compare the sign-up rates between the groups.
+
+---
+
+## The A/B Test as a Statistical Problem
+
+Each visitor either signs up (1) or does not (0), so we model this as a Bernoulli random variable. Let $\pi_A$ and $\pi_B$ represent the probability of signing up under each CTA.
+
+The parameter of interest is:
+
+$$
+\theta = \pi_A - \pi_B
+$$
+
+---
+
+## Simulating Data
+
+We assume:
+
+- $\pi_A = 0.22$
+- $\pi_B = 0.18$
+
+```{python}
+import numpy as np
+
+np.random.seed(123)
+
+n = 1000
+pi_A = 0.22
+pi_B = 0.18
+
+A = np.random.binomial(1, pi_A, n)
+B = np.random.binomial(1, pi_B, n)
+
+theta_hat = A.mean() - B.mean()
+theta_hat
+```
+
+---
+
+## The Law of Large Numbers
+
+```{python}
+import matplotlib.pyplot as plt
+
+diff = A - B
+cum_avg = np.cumsum(diff) / np.arange(1, n+1)
+
+plt.plot(cum_avg)
+plt.axhline(0.04)
+plt.title("LLN Convergence")
+plt.show()
+```
+
+As sample size increases, the estimate converges toward the true value.
+
+---
+
+## Bootstrap Standard Errors
+
+```{python}
+boot = []
+
+for i in range(1000):
+    A_star = np.random.choice(A, n, replace=True)
+    B_star = np.random.choice(B, n, replace=True)
+    boot.append(A_star.mean() - B_star.mean())
+
+np.std(boot)
+```
+
+---
+
+## The Central Limit Theorem
+
+```{python}
+sizes = [25, 50, 100, 500]
+
+for s in sizes:
+    results = []
+    for i in range(1000):
+        A_sim = np.random.binomial(1, pi_A, s)
+        B_sim = np.random.binomial(1, pi_B, s)
+        results.append(A_sim.mean() - B_sim.mean())
+
+    plt.hist(results, bins=30)
+    plt.title(f"n = {s}")
+    plt.show()
+```
+
+---
+
+## Hypothesis Testing
+
+```{python}
+from scipy.stats import norm
+
+se = np.sqrt(A.var()/n + B.var()/n)
+z = theta_hat / se
+p_value = 2 * (1 - norm.cdf(abs(z)))
+
+z, p_value
+```
+
+---
+
+## The T-Test as a Regression
+
+```{python}
+import pandas as pd
+import statsmodels.api as sm
+
+Y = np.concatenate([A, B])
+D = np.concatenate([np.ones(n), np.zeros(n)])
+
+df = pd.DataFrame({"Y": Y, "D": D})
+
+X = sm.add_constant(df["D"])
+model = sm.OLS(df["Y"], X).fit()
+
+model.summary()
+```
+
+---
+
+## The Problem with Peeking
+
+```{python}
+false_pos = []
+
+for i in range(500):
+    A_sim = np.random.binomial(1, 0.2, 1000)
+    B_sim = np.random.binomial(1, 0.2, 1000)
+
+    sig = False
+
+    for k in range(100, 1001, 100):
+        theta = A_sim[:k].mean() - B_sim[:k].mean()
+        se = np.sqrt(A_sim[:k].var()/k + B_sim[:k].var()/k)
+
+        if se > 0:
+            z = theta / se
+            p = 2 * (1 - norm.cdf(abs(z)))
+            if p < 0.05:
+                sig = True
+                break
+
+    false_pos.append(sig)
+
+np.mean(false_pos)
+```
+
+---
+
+## Conclusion
+
+This exercise demonstrates how A/B testing connects to key ideas in frequentist statistics. We see how estimators behave, how uncertainty is measured, and how improper testing (like peeking) can lead to incorrect conclusions.
