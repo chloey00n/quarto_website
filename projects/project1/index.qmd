@@ -52,6 +52,8 @@ theta_hat = A.mean() - B.mean()
 theta_hat
 ```
 
+The estimated treatment effect (`theta_hat`) represents the observed difference in signup rates between CTA A and CTA B in this simulated sample.
+
 ---
 
 ## The Law of Large Numbers
@@ -62,13 +64,16 @@ import matplotlib.pyplot as plt
 diff = A - B
 cum_avg = np.cumsum(diff) / np.arange(1, n+1)
 
+plt.figure(figsize=(8, 5))
 plt.plot(cum_avg)
-plt.axhline(0.04)
-plt.title("LLN Convergence")
+plt.axhline(0.04, linestyle="--")
+plt.title("LLN Convergence of the Estimated Difference in Signup Rates")
+plt.xlabel("Number of observations")
+plt.ylabel("Cumulative average of A - B")
 plt.show()
 ```
 
-As sample size increases, the estimate converges toward the true value.
+As the sample size increases, the cumulative average approaches the true difference in signup rates (0.04), illustrating the Law of Large Numbers.
 
 ---
 
@@ -85,6 +90,8 @@ for i in range(1000):
 np.std(boot)
 ```
 
+The bootstrap standard error summarizes how much the estimated treatment effect would vary across repeated samples, providing a practical measure of sampling uncertainty.
+
 ---
 
 ## The Central Limit Theorem
@@ -99,10 +106,15 @@ for s in sizes:
         B_sim = np.random.binomial(1, pi_B, s)
         results.append(A_sim.mean() - B_sim.mean())
 
+    plt.figure(figsize=(7, 4))
     plt.hist(results, bins=30)
-    plt.title(f"n = {s}")
+    plt.title(f"Sampling Distribution of the Difference in Means (n = {s})")
+    plt.xlabel("Estimated difference in signup rates")
+    plt.ylabel("Frequency")
     plt.show()
 ```
+
+As the sample size increases, the sampling distribution becomes more concentrated around the true effect and more bell-shaped, which is consistent with the Central Limit Theorem.
 
 ---
 
@@ -117,6 +129,8 @@ p_value = 2 * (1 - norm.cdf(abs(z)))
 
 z, p_value
 ```
+
+The p-value tells us how surprising the observed difference would be if the two CTAs truly had the same signup rate. A small p-value would provide evidence against the null hypothesis of no difference.
 
 ---
 
@@ -136,6 +150,8 @@ model = sm.OLS(df["Y"], X).fit()
 
 model.summary()
 ```
+
+In this regression, the coefficient on `D` represents the difference in average signup rates between the two groups. This shows that a simple two-sample comparison can also be expressed as a regression model.
 
 ---
 
@@ -166,8 +182,12 @@ for i in range(500):
 np.mean(false_pos)
 ```
 
+This simulation shows that repeatedly checking results before the experiment is complete (peeking) can increase the probability of false positives, leading to incorrect conclusions.
+
 ---
 
 ## Conclusion
 
-This exercise demonstrates how A/B testing connects to key ideas in frequentist statistics. We see how estimators behave, how uncertainty is measured, and how improper testing (like peeking) can lead to incorrect conclusions.
+This exercise demonstrates how A/B testing connects to key ideas in frequentist statistics. By simulating signup behavior under two different CTAs, we can see how estimates converge, how uncertainty can be quantified, and how hypothesis testing helps evaluate differences between groups.
+
+From a marketing perspective, this example shows that even small wording changes can influence user behavior. At the same time, it highlights the importance of using enough data and avoiding improper practices such as peeking, which can lead to false conclusions and poor business decisions.
