@@ -263,7 +263,7 @@ window.Quarto = {
 <li><span class="math inline">\(\pi_A = 0.22\)</span></li>
 <li><span class="math inline">\(\pi_B = 0.18\)</span></li>
 </ul>
-<div id="95051cd5" class="cell" data-execution_count="1">
+<div id="db9584fd" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">123</span>)</span>
@@ -281,34 +281,38 @@ window.Quarto = {
 <pre><code>np.float64(0.005999999999999978)</code></pre>
 </div>
 </div>
+<p>The estimated treatment effect (<code>theta_hat</code>) represents the observed difference in signup rates between CTA A and CTA B in this simulated sample.</p>
 <hr>
 </section>
 <section id="the-law-of-large-numbers" class="level2">
 <h2 class="anchored" data-anchor-id="the-law-of-large-numbers">The Law of Large Numbers</h2>
-<div id="0420bdef" class="cell" data-execution_count="2">
+<div id="5d9e84bc" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>diff <span class="op">=</span> A <span class="op">-</span> B</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>cum_avg <span class="op">=</span> np.cumsum(diff) <span class="op">/</span> np.arange(<span class="dv">1</span>, n<span class="op">+</span><span class="dv">1</span>)</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>plt.plot(cum_avg)</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>plt.axhline(<span class="fl">0.04</span>)</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"LLN Convergence"</span>)</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">5</span>))</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>plt.plot(cum_avg)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>plt.axhline(<span class="fl">0.04</span>, linestyle<span class="op">=</span><span class="st">"--"</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"LLN Convergence of the Estimated Difference in Signup Rates"</span>)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Number of observations"</span>)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Cumulative average of A - B"</span>)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="index_files/figure-html/cell-3-output-1.png" width="590" height="431" class="figure-img"></p>
+<p><img src="index_files/figure-html/cell-3-output-1.png" width="683" height="449" class="figure-img"></p>
 </figure>
 </div>
 </div>
 </div>
-<p>As sample size increases, the estimate converges toward the true value.</p>
+<p>As the sample size increases, the cumulative average approaches the true difference in signup rates (0.04), illustrating the Law of Large Numbers.</p>
 <hr>
 </section>
 <section id="bootstrap-standard-errors" class="level2">
 <h2 class="anchored" data-anchor-id="bootstrap-standard-errors">Bootstrap Standard Errors</h2>
-<div id="586395d0" class="cell" data-execution_count="3">
+<div id="d763a055" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>boot <span class="op">=</span> []</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1000</span>):</span>
@@ -321,11 +325,12 @@ window.Quarto = {
 <pre><code>np.float64(0.01791666126821624)</code></pre>
 </div>
 </div>
+<p>The bootstrap standard error summarizes how much the estimated treatment effect would vary across repeated samples, providing a practical measure of sampling uncertainty.</p>
 <hr>
 </section>
 <section id="the-central-limit-theorem" class="level2">
 <h2 class="anchored" data-anchor-id="the-central-limit-theorem">The Central Limit Theorem</h2>
-<div id="84e178f4" class="cell" data-execution_count="4">
+<div id="92b9ac79" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>sizes <span class="op">=</span> [<span class="dv">25</span>, <span class="dv">50</span>, <span class="dv">100</span>, <span class="dv">500</span>]</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> s <span class="kw">in</span> sizes:</span>
@@ -335,43 +340,47 @@ window.Quarto = {
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        B_sim <span class="op">=</span> np.random.binomial(<span class="dv">1</span>, pi_B, s)</span>
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        results.append(A_sim.mean() <span class="op">-</span> B_sim.mean())</span>
 <span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    plt.hist(results, bins<span class="op">=</span><span class="dv">30</span>)</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    plt.title(<span class="ss">f"n = </span><span class="sc">{</span>s<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    plt.figure(figsize<span class="op">=</span>(<span class="dv">7</span>, <span class="dv">4</span>))</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    plt.hist(results, bins<span class="op">=</span><span class="dv">30</span>)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    plt.title(<span class="ss">f"Sampling Distribution of the Difference in Means (n = </span><span class="sc">{</span>s<span class="sc">}</span><span class="ss">)"</span>)</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    plt.xlabel(<span class="st">"Estimated difference in signup rates"</span>)</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    plt.ylabel(<span class="st">"Frequency"</span>)</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="index_files/figure-html/cell-5-output-1.png" width="575" height="431" class="figure-img"></p>
+<p><img src="index_files/figure-html/cell-5-output-1.png" width="593" height="376" class="figure-img"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="index_files/figure-html/cell-5-output-2.png" width="575" height="431" class="figure-img"></p>
+<p><img src="index_files/figure-html/cell-5-output-2.png" width="593" height="376" class="figure-img"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="index_files/figure-html/cell-5-output-3.png" width="575" height="431" class="figure-img"></p>
+<p><img src="index_files/figure-html/cell-5-output-3.png" width="593" height="376" class="figure-img"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="index_files/figure-html/cell-5-output-4.png" width="578" height="431" class="figure-img"></p>
+<p><img src="index_files/figure-html/cell-5-output-4.png" width="597" height="376" class="figure-img"></p>
 </figure>
 </div>
 </div>
 </div>
+<p>As the sample size increases, the sampling distribution becomes more concentrated around the true effect and more bell-shaped, which is consistent with the Central Limit Theorem.</p>
 <hr>
 </section>
 <section id="hypothesis-testing" class="level2">
 <h2 class="anchored" data-anchor-id="hypothesis-testing">Hypothesis Testing</h2>
-<div id="cd8e3158" class="cell" data-execution_count="5">
+<div id="9b3f6274" class="cell" data-execution_count="5">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> norm</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>se <span class="op">=</span> np.sqrt(A.var()<span class="op">/</span>n <span class="op">+</span> B.var()<span class="op">/</span>n)</span>
@@ -383,11 +392,12 @@ window.Quarto = {
 <pre><code>(np.float64(0.3329481993707165), np.float64(0.7391733852118063))</code></pre>
 </div>
 </div>
+<p>The p-value tells us how surprising the observed difference would be if the two CTAs truly had the same signup rate. A small p-value would provide evidence against the null hypothesis of no difference.</p>
 <hr>
 </section>
 <section id="the-t-test-as-a-regression" class="level2">
 <h2 class="anchored" data-anchor-id="the-t-test-as-a-regression">The T-Test as a Regression</h2>
-<div id="f675503f" class="cell" data-execution_count="6">
+<div id="b107f8f1" class="cell" data-execution_count="6">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.api <span class="im">as</span> sm</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -430,7 +440,7 @@ window.Quarto = {
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">Time:</th>
-<td>20:46:36</td>
+<td>20:52:02</td>
 <th data-quarto-table-cell-role="th">Log-Likelihood:</th>
 <td>-1020.0</td>
 </tr>
@@ -526,11 +536,12 @@ window.Quarto = {
 <br><br>Notes:<br>[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
 </div>
 </div>
+<p>In this regression, the coefficient on <code>D</code> represents the difference in average signup rates between the two groups. This shows that a simple two-sample comparison can also be expressed as a regression model.</p>
 <hr>
 </section>
 <section id="the-problem-with-peeking" class="level2">
 <h2 class="anchored" data-anchor-id="the-problem-with-peeking">The Problem with Peeking</h2>
-<div id="10b356a2" class="cell" data-execution_count="7">
+<div id="aebbf16c" class="cell" data-execution_count="7">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>false_pos <span class="op">=</span> []</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">500</span>):</span>
@@ -557,11 +568,13 @@ window.Quarto = {
 <pre><code>np.float64(0.188)</code></pre>
 </div>
 </div>
+<p>This simulation shows that repeatedly checking results before the experiment is complete (peeking) can increase the probability of false positives, leading to incorrect conclusions.</p>
 <hr>
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
-<p>This exercise demonstrates how A/B testing connects to key ideas in frequentist statistics. We see how estimators behave, how uncertainty is measured, and how improper testing (like peeking) can lead to incorrect conclusions.</p>
+<p>This exercise demonstrates how A/B testing connects to key ideas in frequentist statistics. By simulating signup behavior under two different CTAs, we can see how estimates converge, how uncertainty can be quantified, and how hypothesis testing helps evaluate differences between groups.</p>
+<p>From a marketing perspective, this example shows that even small wording changes can influence user behavior. At the same time, it highlights the importance of using enough data and avoiding improper practices such as peeking, which can lead to false conclusions and poor business decisions.</p>
 
 
 </section>
