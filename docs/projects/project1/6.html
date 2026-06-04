@@ -9,8 +9,7 @@
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
   <meta name="generator" content="quarto-1.8.26">
 
-  <meta name="author" content="Jihee Yoon">
-  <title>Jihee Yoon – How K-Means Creates Customer Segments</title>
+  <title>Jihee Yoon – quarto-input1c2352e600652bc2</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
@@ -126,18 +125,7 @@
   <div class="reveal">
     <div class="slides">
 
-<section id="title-slide" class="quarto-title-block center">
-  <h1 class="title">How K-Means Creates Customer Segments</h1>
 
-<div class="quarto-title-authors">
-<div class="quarto-title-author">
-<div class="quarto-title-author-name">
-Jihee Yoon 
-</div>
-</div>
-</div>
-
-</section>
 <section id="section" class="slide level2" data-background-color="#0A0A0A">
 <h2></h2>
 <style>
@@ -149,243 +137,244 @@ Jihee Yoon
   font-size: 11px; font-weight: 600; letter-spacing: 4px;
   text-transform: uppercase; color: #06C167; margin-bottom: 14px;
 }
-.slide-h { font-size: 38px; font-weight: 700; line-height: 1.15; }
+.slide-h { font-size: 42px; font-weight: 700; line-height: 1.15; }
+.slide-sub { font-size: 16px; color: #888; font-weight: 400; margin-top: 8px; margin-bottom: 28px; }
 
-/* ── SLIDE 1: TITLE ── */
+/* ── SLIDE 1 ── */
 .s1 {
   position: absolute; inset: 0; background: #0A0A0A;
   display: flex; flex-direction: column;
   justify-content: center; padding: 72px 80px; overflow: hidden;
 }
-.s1-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 4px;
-  text-transform: uppercase; color: #06C167; margin-bottom: 20px; }
-.s1-title { font-size: 58px; font-weight: 800; line-height: 1.05;
-  color: #fff; margin-bottom: 16px; max-width: 720px; }
-.s1-sub { font-size: 17px; font-weight: 300; color: #4a4a4a;
-  margin-bottom: 44px; max-width: 580px; line-height: 1.6; }
-.s1-result-label { font-size: 10px; letter-spacing: 3px; font-weight: 600;
-  text-transform: uppercase; color: #333; margin-bottom: 14px; }
-.s1-pills { display: flex; flex-direction: column; gap: 10px; }
+.s1-title {
+  font-size: 62px; font-weight: 800; line-height: 1.05;
+  color: #fff; margin-bottom: 16px; max-width: 760px;
+}
+.s1-sub {
+  font-size: 18px; font-weight: 300; color: #4a4a4a;
+  margin-bottom: 52px; max-width: 580px; line-height: 1.6;
+}
+.s1-result-label {
+  font-size: 10px; letter-spacing: 3px; font-weight: 600;
+  text-transform: uppercase; color: #333; margin-bottom: 16px;
+}
+.s1-pills { display: flex; flex-direction: row; gap: 12px; flex-wrap: wrap; }
 .pill {
   display: flex; align-items: center; gap: 12px;
   background: #111; border: 1px solid #1e1e1e;
-  border-radius: 10px; padding: 12px 18px; width: fit-content;
-  font-size: 14px; font-weight: 500; color: #888;
+  border-radius: 10px; padding: 13px 22px;
+  font-size: 16px; font-weight: 500; color: #ccc;
+  opacity: 0; transform: translateY(12px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
 }
+.pill.show { opacity: 1; transform: translateY(0); }
 .pill-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-.pill-action { color: #444; font-weight: 400; margin-left: 4px; }
-.s1-author { position: absolute; bottom: 32px; left: 80px;
-  font-size: 12px; color: #2a2a2a; }
+.s1-author { position: absolute; bottom: 32px; left: 80px; font-size: 12px; color: #2a2a2a; }
+.s1-hint { position: absolute; bottom: 32px; right: 80px; font-size: 12px; color: #222; letter-spacing: 1px; }
 .deco { position: absolute; border-radius: 50%; pointer-events: none; }
 
-/* ── SLIDE 2: WHY REAL WORLD ── */
+/* ── SLIDE 2 ── */
 .s2 {
   position: absolute; inset: 0; background: #fff;
-  display: flex; flex-direction: column; padding: 52px 72px 44px;
+  display: flex; flex-direction: column; padding: 48px 72px 40px;
 }
-.s2-body { display: flex; gap: 32px; flex: 1; margin-top: 8px; }
-.s2-left { flex: 1; display: flex; flex-direction: column; gap: 18px; }
-.s2-right { width: 420px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; }
-.s2-def {
-  background: #F7F7F7; border-radius: 16px; padding: 28px;
-  border-left: 4px solid #06C167;
+.s2-body { display: flex; gap: 36px; flex: 1; margin-top: 4px; }
+.s2-left { flex: 1; display: flex; flex-direction: column; gap: 16px; }
+.s2-right { width: 420px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; }
+
+.s2-why-title { font-size: 14px; font-weight: 700; color: #0A0A0A; margin-bottom: 12px; }
+.s2-why-points { display: flex; flex-direction: column; gap: 12px; }
+.s2-why-item { display: flex; align-items: flex-start; gap: 12px; }
+.s2-why-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #06C167; flex-shrink: 0; margin-top: 5px;
 }
-.s2-def-title { font-size: 14px; font-weight: 700; color: #0A0A0A; margin-bottom: 10px; }
-.s2-def-text { font-size: 14px; color: #444; line-height: 1.7; }
-.s2-def-text strong { color: #0A0A0A; }
-.s2-examples { display: flex; flex-direction: column; gap: 12px; }
+.s2-why-text { font-size: 15px; color: #333; line-height: 1.6; }
+.s2-why-text strong { color: #0A0A0A; }
+
+.s2-crit-title {
+  font-size: 12px; font-weight: 700; color: #888;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px;
+}
+.s2-crit-row { display: flex; gap: 10px; }
+.s2-crit-tag {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: #F7F7F7; border-radius: 8px;
+  padding: 10px 18px; font-size: 15px; font-weight: 600; color: #0A0A0A;
+}
+.s2-crit-dot { width: 7px; height: 7px; border-radius: 50%; background: #06C167; }
+
 .s2-ex {
-  background: #F7F7F7; border-radius: 12px; padding: 18px 20px;
+  background: #F7F7F7; border-radius: 14px; padding: 20px 22px;
   display: flex; align-items: flex-start; gap: 14px;
 }
-.s2-ex-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
-.s2-ex-co { font-size: 13px; font-weight: 700; color: #0A0A0A; margin-bottom: 4px; }
-.s2-ex-desc { font-size: 12.5px; color: #666; line-height: 1.55; }
-.s2-ex-tag { font-size: 11.5px; font-weight: 600; color: var(--c); margin-top: 5px; }
-.s2-criteria {
-  background: #0A0A0A; border-radius: 16px; padding: 24px 28px;
-}
-.s2-crit-title { font-size: 12px; font-weight: 700; color: #06C167;
-  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
-.s2-crit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.s2-crit-item { display: flex; align-items: center; gap: 8px; }
-.s2-crit-dot { width: 6px; height: 6px; border-radius: 50%; background: #06C167; flex-shrink: 0; }
-.s2-crit-text { font-size: 12.5px; color: #777; }
-.s2-quote {
-  margin-top: auto; padding: 14px 20px;
-  background: #F7F7F7; border-radius: 10px;
-  font-size: 13.5px; color: #333; font-style: italic;
-  border-left: 3px solid #06C167; line-height: 1.55;
-}
+.s2-ex-icon { font-size: 24px; flex-shrink: 0; margin-top: 1px; }
+.s2-ex-co { font-size: 14px; font-weight: 700; color: #0A0A0A; margin-bottom: 5px; }
+.s2-ex-desc { font-size: 13px; color: #666; line-height: 1.6; }
+.s2-ex-tag { font-size: 12px; font-weight: 600; color: var(--c); margin-top: 6px; }
 
-/* ── SLIDE 3: PERSONAS ── */
+/* ── SLIDE 3 ── */
 .s3 {
   position: absolute; inset: 0; background: #F7F7F7;
   display: flex; flex-direction: column; padding: 48px 72px 40px;
 }
-.s3-grid { display: grid; grid-template-columns: 1fr 1fr 1fr;
-  gap: 20px; flex: 1; }
+.s3-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; flex: 1; }
 .s3-card {
   border-radius: 20px; padding: 28px 26px;
   display: flex; flex-direction: column;
-  background: var(--bg);
-  box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+  background: #fff; box-shadow: 0 2px 16px rgba(0,0,0,0.05);
 }
-.s3-cluster { font-size: 10px; font-weight: 700; letter-spacing: 3px;
-  text-transform: uppercase; color: var(--c); margin-bottom: 8px; }
+.s3-cluster { font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--c); margin-bottom: 8px; }
 .s3-icon { font-size: 34px; margin-bottom: 12px; }
 .s3-name { font-size: 20px; font-weight: 800; color: #0A0A0A; margin-bottom: 16px; }
 .s3-rows { display: flex; flex-direction: column; gap: 8px; }
-.s3-row { display: flex; justify-content: space-between; align-items: center;
-  padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.06); }
+.s3-row { display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.06); }
 .s3-row:last-child { border-bottom: none; }
-.s3-lbl { font-size: 12px; color: #888; }
-.s3-val { font-size: 12.5px; font-weight: 600; color: #0A0A0A; }
-.s3-action {
-  margin-top: auto; padding-top: 14px;
-  display: flex; align-items: center; gap: 8px;
-}
+.s3-lbl { font-size: 13px; color: #888; }
+.s3-val { font-size: 13px; font-weight: 600; color: #0A0A0A; }
+.s3-action { margin-top: auto; padding-top: 14px; display: flex; align-items: center; gap: 8px; }
 .s3-action-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex-shrink: 0; }
-.s3-action-text { font-size: 12.5px; font-weight: 600; color: var(--c); }
-.s3-note {
-  margin-top: 22px; padding: 14px 22px;
-  background: #0A0A0A; border-radius: 12px;
-  font-size: 14px; color: #999; text-align: center;
-}
-.s3-note strong { color: #fff; }
+.s3-action-text { font-size: 13px; font-weight: 600; color: var(--c); }
 
 /* ── SLIDE 4: KMEANS ── */
-.s4 {
-  position: absolute; inset: 0; background: #0A0A0A; display: flex;
-}
+.s4 { position: absolute; inset: 0; background: #F7F7F7; display: flex; }
 .s4-left {
   width: 320px; flex-shrink: 0;
   display: flex; flex-direction: column;
   justify-content: center; padding: 52px 36px;
-  border-right: 1px solid #181818;
+  border-right: 1px solid #E0E0E0;
 }
-.s4-title { font-size: 26px; font-weight: 700; color: #fff;
-  line-height: 1.25; margin-bottom: 28px; }
+.s4-title { font-size: 26px; font-weight: 700; color: #0A0A0A; line-height: 1.25; margin-bottom: 28px; }
 .steps { display: flex; flex-direction: column; }
 .step {
   display: flex; align-items: flex-start; gap: 14px;
-  padding: 13px 0; border-bottom: 1px solid #141414;
-  opacity: 0.22; transition: opacity 0.35s;
+  padding: 13px 0; border-bottom: 1px solid #E8E8E8;
+  opacity: 0.28; transition: opacity 0.35s;
 }
 .step.on { opacity: 1; }
 .step-n {
   width: 26px; height: 26px; border-radius: 50%;
-  background: #181818; color: #444;
+  background: #E8E8E8; color: #aaa;
   font-size: 11px; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; transition: all 0.35s;
 }
-.step.on .step-n { background: #06C167; color: #000; }
-.step-txt { font-size: 13px; color: #444; line-height: 1.55; padding-top: 3px; }
-.step.on .step-txt { color: #bbb; }
-.step.on .step-txt strong { color: #fff; }
-.s4-right {
-  flex: 1; position: relative;
-  display: flex; align-items: center; justify-content: center;
-}
+.step.on .step-n { background: #06C167; color: #fff; }
+.step-txt { font-size: 13px; color: #aaa; line-height: 1.55; padding-top: 3px; }
+.step.on .step-txt { color: #444; }
+.step.on .step-txt strong { color: #0A0A0A; }
+.s4-right { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; }
 #kc { display: block; }
-.s4-btns {
-  position: absolute; bottom: 26px; left: 50%;
-  transform: translateX(-50%); display: flex; gap: 10px;
-}
-.btn {
-  padding: 9px 22px; border-radius: 8px;
-  font-size: 13px; font-weight: 600;
-  cursor: pointer; border: none; transition: all 0.18s; font-family: inherit;
-}
+.s4-btns { position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; }
+.btn { padding: 9px 22px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.18s; font-family: inherit; }
 .btn-p { background: #06C167; color: #000; }
 .btn-p:hover { background: #04a356; }
 .btn-s { background: #181818; color: #666; }
 .btn-s:hover { background: #222; color: #aaa; }
+
+/* ── SLIDE 5: ACTIONS ── */
+.s5 { position: absolute; inset: 0; background: #fff; display: flex; flex-direction: column; padding: 52px 72px 48px; }
+.s5-sub { font-size: 16px; color: #888; margin-top: 8px; margin-bottom: 28px; }
+.s5-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; flex: 1; }
+.s5-card { background: #F7F7F7; border: 1px solid #E8E8E8; border-radius: 16px; padding: 26px; display: flex; flex-direction: column; gap: 14px; }
+.s5-badge { display: inline-flex; align-items: center; gap: 8px; background: #EFEFEF; border-radius: 20px; padding: 5px 13px; width: fit-content; }
+.s5-bdot { width: 7px; height: 7px; border-radius: 50%; background: var(--c); }
+.s5-btxt { font-size: 11px; font-weight: 600; color: #999; letter-spacing: 1px; }
+.s5-who { font-size: 19px; font-weight: 700; color: #0A0A0A; }
+.s5-line { height: 1px; background: #E8E8E8; }
+.s5-items { display: flex; flex-direction: column; gap: 11px; }
+.s5-item { display: flex; align-items: flex-start; gap: 10px; }
+.s5-arr { font-size: 13px; color: var(--c); flex-shrink: 0; margin-top: 1px; }
+.s5-txt { font-size: 13px; color: #888; line-height: 1.5; }
+.s5-txt strong { color: #333; }
 </style>
 
-<!-- ══ SLIDE 1: TITLE ══ -->
+<!-- ══ SLIDE 1 ══ -->
 <div class="s1">
   <div class="deco" style="width:500px;height:500px;right:-120px;top:50%;transform:translateY(-50%);background:radial-gradient(circle at 40% 40%,#06C16715,#00B4D808,transparent 70%);border:1px solid #06C16720;"></div>
   <div class="deco" style="width:260px;height:260px;right:130px;top:25%;background:radial-gradient(circle,#FF6B3510,transparent 70%);border:1px solid #FF6B3815;"></div>
 
-  <div class="s1-eyebrow">MSBA Marketing Analytics · UCSD Rady</div>
-  <div class="s1-title">How K-Means Creates<br>Customer Segments</div>
+  <div class="s1-title">How K-Means Turns Data<br>Into Marketing Decisions</div>
   <div class="s1-sub">One algorithm, three clusters, infinite marketing decisions — a step-by-step visual walkthrough using Uber.</div>
 
-  <div class="s1-result-label">Result: 3 distinct Uber customer segments</div>
+  <div class="s1-result-label">Today we'll see how these 3 customer groups are created</div>
   <div class="s1-pills">
-    <div class="pill">
-      <div class="pill-dot" style="background:#06C167"></div>
-      Weekend Riders <span class="pill-action">— activate with discounts</span>
-    </div>
-    <div class="pill">
-      <div class="pill-dot" style="background:#00B4D8"></div>
-      Daily Commuters <span class="pill-action">— lock in with subscriptions</span>
-    </div>
-    <div class="pill">
-      <div class="pill-dot" style="background:#FF6B35"></div>
-      Eats Power Users <span class="pill-action">— reward &amp; retain</span>
-    </div>
+    <div class="pill" id="p1"><div class="pill-dot" style="background:#06C167"></div>Weekend Riders</div>
+    <div class="pill" id="p2"><div class="pill-dot" style="background:#00B4D8"></div>Daily Commuters</div>
+    <div class="pill" id="p3"><div class="pill-dot" style="background:#FF6B35"></div>Eats Power Users</div>
   </div>
+
   <div class="s1-author">Jihee Yoon</div>
+  <div class="s1-hint">click to reveal ↓</div>
 </div>
+
+<script>
+(function(){
+  let shown = 0;
+  const pills = ['p1','p2','p3'];
+  document.addEventListener('click', function(e) {
+    const s1 = document.querySelector('.s1');
+    if (s1 && s1.offsetParent !== null && shown < pills.length) {
+      document.getElementById(pills[shown]).classList.add('show');
+      shown++;
+      e.stopPropagation();
+    }
+  }, true);
+})();
+</script>
 </section>
 <section id="section-1" class="slide level2" data-background-color="#ffffff">
 <h2></h2>
-<!-- ══ SLIDE 2: WHY SEGMENTATION ══ -->
+<!-- ══ SLIDE 2 ══ -->
 <div class="s2">
   <div class="label" style="color:#06C167">Real World</div>
-  <div class="slide-h" style="color:#0A0A0A;margin-bottom:24px">Why segmentation matters</div>
+  <div class="slide-h" style="color:#0A0A0A">Why segmentation matters</div>
   <div class="s2-body">
     <div class="s2-left">
-      <div class="s2-def">
-        <div class="s2-def-title">What is segmentation?</div>
-        <div class="s2-def-text">
-          Divide customers into groups that are <strong>similar within</strong> each group
-          and <strong>different between</strong> groups — so you can take
-          <strong>different marketing actions</strong> for each.
+      <div>
+        <div class="s2-why-points">
+          <div class="s2-why-item">
+            <div class="s2-why-dot"></div>
+            <div class="s2-why-text">Every market has <strong>heterogeneous customers</strong> — different needs, different willingness to pay, different behavior patterns.</div>
+          </div>
+          <div class="s2-why-item">
+            <div class="s2-why-dot"></div>
+            <div class="s2-why-text">A single product or message aimed at the <strong>"average" customer</strong> ends up resonating with nobody — you leave value on the table.</div>
+          </div>
+          <div class="s2-why-item">
+            <div class="s2-why-dot"></div>
+            <div class="s2-why-text">Segmentation lets you <strong>allocate resources</strong> where they have the highest return — high-LTV segments get retention spend, price-sensitive segments get promotions.</div>
+          </div>
         </div>
       </div>
-      <div class="s2-criteria">
+
+      <div style="margin-top: 8px;">
         <div class="s2-crit-title">A good segmentation is</div>
-        <div class="s2-crit-grid">
-          <div class="s2-crit-item"><div class="s2-crit-dot"></div><div class="s2-crit-text">Relevant</div></div>
-          <div class="s2-crit-item"><div class="s2-crit-dot"></div><div class="s2-crit-text">Substantial</div></div>
-          <div class="s2-crit-item"><div class="s2-crit-dot"></div><div class="s2-crit-text">Identifiable</div></div>
-          <div class="s2-crit-item"><div class="s2-crit-dot"></div><div class="s2-crit-text">Accessible</div></div>
-          <div class="s2-crit-item"><div class="s2-crit-dot"></div><div class="s2-crit-text">Actionable</div></div>
+        <div class="s2-crit-row" style="flex-wrap:wrap;gap:10px;">
+          <div class="s2-crit-tag"><div class="s2-crit-dot"></div>Relevant</div>
+          <div class="s2-crit-tag"><div class="s2-crit-dot"></div>Identifiable</div>
+          <div class="s2-crit-tag"><div class="s2-crit-dot"></div>Actionable</div>
+          <div class="s2-crit-tag"><div class="s2-crit-dot"></div>Substantial</div>
+          <div class="s2-crit-tag"><div class="s2-crit-dot"></div>Accessible</div>
         </div>
-      </div>
-      <div class="s2-quote">
-        "No one wants room-temperature tea. Don't make the average product — cater to the differences."
       </div>
     </div>
+
     <div class="s2-right">
-      <div class="s2-examples">
-        <div class="s2-ex" style="--c:#06C167">
-          <div class="s2-ex-icon">🎬</div>
-          <div>
-            <div class="s2-ex-co">Netflix</div>
-            <div class="s2-ex-desc">Segments users by watch behavior — binge watchers, casual viewers, movie lovers — to personalize thumbnails and recommendations per profile.</div>
-            <div class="s2-ex-tag">↑ Reduces churn by keeping each segment engaged differently</div>
-          </div>
+      <div class="s2-ex" style="--c:#06C167">
+        <div class="s2-ex-icon">🎬</div>
+        <div>
+          <div class="s2-ex-co">Netflix</div>
+          <div class="s2-ex-desc">Segments users by watch behavior — binge watchers, casual viewers, movie lovers — to personalize thumbnails and recommendations per profile.</div>
+          <div class="s2-ex-tag">↑ Reduces churn by keeping each segment engaged differently</div>
         </div>
-        <div class="s2-ex" style="--c:#00B4D8">
-          <div class="s2-ex-icon">🏰</div>
-          <div>
-            <div class="s2-ex-co">Disney</div>
-            <div class="s2-ex-desc">Prices tickets by day and visitor type — SoCal residents, families, tourist peak days — using purchase data to maximize yield per segment.</div>
-            <div class="s2-ex-tag">↑ Same park, different price = segment-aware revenue management</div>
-          </div>
-        </div>
-        <div class="s2-ex" style="--c:#FF6B35">
-          <div class="s2-ex-icon">🚗</div>
-          <div>
-            <div class="s2-ex-co">Uber</div>
-            <div class="s2-ex-desc">Identifies rider archetypes from trip frequency, timing, and spend — then sends targeted promos: discounts to casuals, subscriptions to commuters.</div>
-            <div class="s2-ex-tag">↑ Today's example — let's see how K-means builds these segments</div>
-          </div>
+      </div>
+      <div class="s2-ex" style="--c:#FF6B35">
+        <div class="s2-ex-icon">🚗</div>
+        <div>
+          <div class="s2-ex-co">Uber</div>
+          <div class="s2-ex-desc">Identifies rider archetypes from trip frequency, timing, and spend — then sends targeted promos: discounts to casuals, subscriptions to commuters.</div>
+          <div class="s2-ex-tag">↑ Today's example — let's see how K-means builds these segments</div>
         </div>
       </div>
     </div>
@@ -394,13 +383,14 @@ Jihee Yoon
 </section>
 <section id="section-2" class="slide level2" data-background-color="#F7F7F7">
 <h2></h2>
-<!-- ══ SLIDE 3: PERSONAS ══ -->
+<!-- ══ SLIDE 3 ══ -->
 <div class="s3">
-  <div class="label" style="color:#06C167">From Clusters to Profiles</div>
-  <div class="slide-h" style="color:#0A0A0A;margin-bottom:26px">Three Uber customer personas</div>
+  <div class="label" style="color:#06C167">Segmentation at Uber</div>
+  <div class="slide-h" style="color:#0A0A0A">Example: What do Uber's segments look like?</div>
+  <div class="slide-sub">Clusters are just math — profiling gives them meaning the business can act on</div>
   <div class="s3-grid">
 
-    <div class="s3-card" style="--c:#06C167;--bg:#fff">
+    <div class="s3-card" style="--c:#06C167">
       <div class="s3-cluster">Cluster A</div>
       <div class="s3-icon">🚗</div>
       <div class="s3-name">Weekend Riders</div>
@@ -417,7 +407,7 @@ Jihee Yoon
       </div>
     </div>
 
-    <div class="s3-card" style="--c:#00B4D8;--bg:#fff">
+    <div class="s3-card" style="--c:#00B4D8">
       <div class="s3-cluster">Cluster B</div>
       <div class="s3-icon">💼</div>
       <div class="s3-name">Daily Commuters</div>
@@ -434,7 +424,7 @@ Jihee Yoon
       </div>
     </div>
 
-    <div class="s3-card" style="--c:#FF6B35;--bg:#fff">
+    <div class="s3-card" style="--c:#FF6B35">
       <div class="s3-cluster">Cluster C</div>
       <div class="s3-icon">🍔</div>
       <div class="s3-name">Eats Power Users</div>
@@ -452,34 +442,34 @@ Jihee Yoon
     </div>
 
   </div>
-  <div class="s3-note">
-    Clusters are just math — <strong>profiling gives them meaning</strong> the business can act on
-  </div>
 </div>
 </section>
-<section id="section-3" class="slide level2" data-background-color="#0A0A0A">
+<section id="section-3" class="slide level2" data-background-color="#F7F7F7">
 <h2></h2>
-<!-- ══ SLIDE 4: K-MEANS ANIMATION ══ -->
+<!-- ══ SLIDE 4: K-MEDOIDS ══ -->
 <div class="s4">
   <div class="s4-left">
-    <div class="label">K-Means Algorithm</div>
-    <div class="s4-title">Clustering<br>in 4 steps</div>
+    <div class="label">K-Medoids (PAM)</div>
+    <div class="s4-title">A more robust<br>alternative</div>
+    <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:20px;">
+      Unlike K-Means, the center must be a <strong style="color:#0A0A0A">real data point</strong> — not an average. More robust to outliers.
+    </div>
     <div class="steps">
       <div class="step on" id="st0">
         <div class="step-n">1</div>
-        <div class="step-txt"><strong>Place centroids</strong><br>Pick K random starting points</div>
+        <div class="step-txt"><strong>Pick medoids</strong><br>Choose K actual data points as centers</div>
       </div>
       <div class="step" id="st1">
         <div class="step-n">2</div>
-        <div class="step-txt"><strong>Assign points</strong><br>Each point → nearest centroid</div>
+        <div class="step-txt"><strong>Assign points</strong><br>Each point → nearest medoid</div>
       </div>
       <div class="step" id="st2">
         <div class="step-n">3</div>
-        <div class="step-txt"><strong>Move centroids</strong><br>Recompute cluster means</div>
+        <div class="step-txt"><strong>Swap medoids</strong><br>Try each non-medoid as a replacement; keep if cost decreases</div>
       </div>
       <div class="step" id="st3">
         <div class="step-n">4</div>
-        <div class="step-txt"><strong>Repeat</strong><br>Until assignments stabilize</div>
+        <div class="step-txt"><strong>Repeat</strong><br>Until no swap improves the solution</div>
       </div>
     </div>
   </div>
@@ -494,86 +484,210 @@ Jihee Yoon
 
 <script>
 (function(){
-  const CLR=['#06C167','#00B4D8','#FF6B35'], BG='#0A0A0A';
-  let pts=[],cens=[],asgn=[],phase=0;
-  function d(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+  const CLR=['#06C167','#00B4D8','#FF6B35'], BG='#F7F7F7';
+  let pts=[], asgn=[], medoids=[], phase=0;
+
+  function d(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+
+  function totalCost(meds, assignments){
+    return pts.reduce((s,p,i) => s + d(p, meds[assignments[i]]), 0);
+  }
+
+  function assign(meds){
+    return pts.map(p => {
+      let best=0, bd=Infinity;
+      meds.forEach((m,k)=>{ const dd=d(p,m); if(dd<bd){bd=dd;best=k;} });
+      return best;
+    });
+  }
+
   function gen(){
     pts=[];
-    [[220,190,65,55],[590,165,75,65],[420,430,85,60]].forEach(([cx,cy,sx,sy])=>{
-      for(let i=0;i<34;i++) pts.push({x:cx+(Math.random()-.5)*2*sx,y:cy+(Math.random()-.5)*2*sy,c:'#252525'});
+    [[220,195,60,50],[595,165,70,60],[415,435,80,55]].forEach(([cx,cy,sx,sy])=>{
+      for(let i=0;i<33;i++) pts.push({
+        x: cx+(Math.random()-.5)*2*sx,
+        y: cy+(Math.random()-.5)*2*sy,
+        c: '#CCCCCC', isMedoid: false
+      });
     });
-    asgn=new Array(pts.length).fill(-1);cens=[];
+    // Add a visible outlier to motivate robustness
+    pts.push({x:780, y:80, c:'#CCCCCC', isMedoid:false});
+    pts.push({x:820, y:150, c:'#CCCCCC', isMedoid:false});
+    asgn = new Array(pts.length).fill(-1);
+    medoids = [];
+    phase = 0;
   }
-  function placeCens(){
-    cens=Array.from({length:3},()=>({x:140+Math.random()*580,y:70+Math.random()*470}));
+
+  function pickInitialMedoids(){
+    // Pick 3 random pts as initial medoids
+    const idx = [];
+    while(idx.length < 3){
+      const r = Math.floor(Math.random()*pts.length);
+      if(!idx.includes(r)) idx.push(r);
+    }
+    medoids = idx.map(i => ({...pts[i], idx: i}));
+    pts.forEach(p => p.isMedoid = false);
+    idx.forEach(i => pts[i].isMedoid = true);
   }
-  function assign(){
-    pts.forEach((p,i)=>{
-      let best=0,bd=Infinity;
-      cens.forEach((c,k)=>{const dd=d(p,c);if(dd<bd){bd=dd;best=k;}});
-      asgn[i]=best;p.c=CLR[best];
-    });
+
+  function doAssign(){
+    asgn = assign(medoids);
+    pts.forEach((p,i) => { p.c = CLR[asgn[i]]; });
   }
-  function move(){
-    cens=cens.map((_,k)=>{
-      const pp=pts.filter((_,i)=>asgn[i]===k);
-      if(!pp.length)return cens[k];
-      return{x:pp.reduce((s,p)=>s+p.x,0)/pp.length,y:pp.reduce((s,p)=>s+p.y,0)/pp.length};
-    });
-  }
-  function draw(){
-    const cv=document.getElementById('kc');if(!cv)return;
-    const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
-    ctx.fillStyle=BG;ctx.fillRect(0,0,W,H);
-    ctx.strokeStyle='#141414';ctx.lineWidth=1;
-    for(let x=0;x<=W;x+=55){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-    for(let y=0;y<=H;y+=55){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-    if(phase>=2&&cens.length){
-      const step=12;
-      for(let px=0;px<W;px+=step)for(let py=0;py<H;py+=step){
-        let best=0,bd=Infinity;
-        cens.forEach((c,k)=>{const dd=d({x:px,y:py},c);if(dd<bd){bd=dd;best=k;}});
-        ctx.fillStyle=CLR[best]+'0D';ctx.fillRect(px,py,step,step);
+
+  function doSwap(){
+    // One round of PAM swap
+    let bestCost = totalCost(medoids, asgn);
+    let bestMeds = medoids.map(m=>({...m}));
+    let improved = false;
+
+    for(let k=0; k<medoids.length; k++){
+      for(let i=0; i<pts.length; i++){
+        if(medoids.some(m=>m.idx===i)) continue;
+        const trialMeds = medoids.map((m,j) => j===k ? {...pts[i], idx:i} : {...m});
+        const trialAsgn = assign(trialMeds);
+        const trialCost = totalCost(trialMeds, trialAsgn);
+        if(trialCost < bestCost){
+          bestCost = trialCost;
+          bestMeds = trialMeds;
+          improved = true;
+        }
       }
     }
-    pts.forEach(p=>{
-      ctx.beginPath();ctx.arc(p.x,p.y,5.5,0,Math.PI*2);
-      ctx.fillStyle=p.c;ctx.fill();
-      if(p.c!=='#252525'){ctx.strokeStyle=p.c+'50';ctx.lineWidth=1.5;ctx.stroke();}
+    pts.forEach(p => p.isMedoid = false);
+    medoids = bestMeds;
+    medoids.forEach(m => { pts[m.idx].isMedoid = true; });
+    doAssign();
+    return improved;
+  }
+
+  function draw(){
+    const cv=document.getElementById('kc'); if(!cv)return;
+    const ctx=cv.getContext('2d'), W=cv.width, H=cv.height;
+    ctx.fillStyle=BG; ctx.fillRect(0,0,W,H);
+
+    // Grid
+    ctx.strokeStyle='#E8E8E8'; ctx.lineWidth=1;
+    for(let x=0;x<=W;x+=55){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=0;y<=H;y+=55){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+    // Voronoi regions
+    if(phase>=2 && medoids.length){
+      const step=12;
+      for(let px=0;px<W;px+=step) for(let py=0;py<H;py+=step){
+        let best=0,bd=Infinity;
+        medoids.forEach((m,k)=>{ const dd=d({x:px,y:py},m); if(dd<bd){bd=dd;best=k;} });
+        ctx.fillStyle=CLR[best]+'0D'; ctx.fillRect(px,py,step,step);
+      }
+    }
+
+    // Connection lines from medoid to assigned points
+    if(phase>=2 && medoids.length){
+      medoids.forEach((m,k)=>{
+        pts.forEach((p,i)=>{
+          if(asgn[i]===k && !p.isMedoid){
+            ctx.beginPath(); ctx.moveTo(m.x,m.y); ctx.lineTo(p.x,p.y);
+            ctx.strokeStyle=CLR[k]+'18'; ctx.lineWidth=1; ctx.stroke();
+          }
+        });
+      });
+    }
+
+    // Regular points
+    pts.forEach((p,i)=>{
+      if(p.isMedoid) return;
+      ctx.beginPath(); ctx.arc(p.x,p.y,5.5,0,Math.PI*2);
+      ctx.fillStyle=p.c; ctx.fill();
+      if(p.c!=='#CCCCCC'){ ctx.strokeStyle=p.c+'50'; ctx.lineWidth=1.5; ctx.stroke(); }
     });
-    cens.forEach((c,k)=>{
-      ctx.strokeStyle=CLR[k];ctx.lineWidth=1.5;
-      ctx.beginPath();ctx.moveTo(c.x-20,c.y);ctx.lineTo(c.x+20,c.y);ctx.stroke();
-      ctx.beginPath();ctx.moveTo(c.x,c.y-20);ctx.lineTo(c.x,c.y+20);ctx.stroke();
-      ctx.beginPath();ctx.arc(c.x,c.y,14,0,Math.PI*2);
-      ctx.fillStyle=BG;ctx.fill();
-      ctx.strokeStyle=CLR[k];ctx.lineWidth=2.5;ctx.stroke();
-      ctx.fillStyle=CLR[k];ctx.font='bold 11px -apple-system,sans-serif';
-      ctx.textAlign='center';ctx.fillText(['C1','C2','C3'][k],c.x,c.y+4);
+
+    // Medoids — drawn as diamonds to distinguish from K-Means crosses
+    medoids.forEach((m,k)=>{
+      const sz=14;
+      ctx.beginPath();
+      ctx.moveTo(m.x, m.y-sz);
+      ctx.lineTo(m.x+sz, m.y);
+      ctx.lineTo(m.x, m.y+sz);
+      ctx.lineTo(m.x-sz, m.y);
+      ctx.closePath();
+      ctx.fillStyle='#F7F7F7'; ctx.fill();
+      ctx.strokeStyle=CLR[k]; ctx.lineWidth=2.5; ctx.stroke();
+      ctx.fillStyle=CLR[k]; ctx.font='bold 10px -apple-system,sans-serif';
+      ctx.textAlign='center'; ctx.fillText(['M1','M2','M3'][k], m.x, m.y+4);
     });
-    const msgs=['','Centroids placed randomly','Points assigned to nearest centroid','Centroids moved to cluster means','Converged ✓  Segments are stable'];
+
+    // Status
+    const msgs=['','3 medoids selected (real data points ◇)','Points assigned to nearest medoid','Medoids swapped to minimize total distance','Converged ✓  Medoids are stable'];
     if(msgs[phase]){
-      ctx.fillStyle='#06C167';ctx.font='600 13px -apple-system,sans-serif';
-      ctx.textAlign='left';ctx.fillText(msgs[phase],20,H-16);
+      ctx.fillStyle='#04a356'; ctx.font='600 13px -apple-system,sans-serif';
+      ctx.textAlign='left'; ctx.fillText(msgs[phase],20,H-16);
     }
   }
+
   function setStep(n){
     [0,1,2,3].forEach(i=>{
       const el=document.getElementById('st'+i);
-      if(el)el.classList.toggle('on',i===n);
+      if(el) el.classList.toggle('on', i===n);
     });
   }
+
   window.kNext=function(){
-    if(phase===0){placeCens();phase=1;setStep(0);}
-    else if(phase===1){assign();phase=2;setStep(1);}
-    else if(phase===2){move();phase=3;setStep(2);}
-    else if(phase===3){assign();move();phase=4;setStep(3);}
+    if(phase===0){ pickInitialMedoids(); phase=1; setStep(0); }
+    else if(phase===1){ doAssign(); phase=2; setStep(1); }
+    else if(phase===2){ doSwap(); phase=3; setStep(2); }
+    else if(phase===3){ doSwap(); phase=4; setStep(3); }
     draw();
   };
-  window.kReset=function(){phase=0;gen();setStep(0);draw();};
-  gen();draw();
+  window.kReset=function(){ gen(); setStep(0); draw(); };
+
+  gen(); draw();
 })();
 </script>
+</section>
+<section id="section-4" class="slide level2" data-background-color="#ffffff">
+<h2></h2>
+<!-- ══ SLIDE 5 ══ -->
+<div class="s5">
+  <div class="label">Segmentation → Action</div>
+  <div class="slide-h" style="color:#0A0A0A">Different segments, different strategies</div>
+  <div class="s5-sub" style="color:#888;">Segmentation is only valuable when it changes decisions.</div>
+  <div class="s5-grid">
+
+    <div class="s5-card" style="--c:#06C167">
+      <div class="s5-badge"><div class="s5-bdot"></div><div class="s5-btxt">CLUSTER A · WEEKEND RIDERS</div></div>
+      <div class="s5-who">Activate with discounts</div>
+      <div class="s5-line"></div>
+      <div class="s5-items">
+        <div class="s5-item"><div class="s5-arr">→</div><div class="s5-txt"><strong>$5 off Friday night</strong> push notification</div></div>
+        <div class="s5-item"><div class="s5-arr">→</div><div class="s5-txt"><strong>Referral bonus</strong> to grow the casual base</div></div>
+        <div class="s5-item"><div class="s5-arr">→</div><div class="s5-txt">Retarget on <strong>Instagram / TikTok</strong></div></div>
+      </div>
+    </div>
+
+    <div class="s5-card" style="--c:#00B4D8">
+      <div class="s5-badge"><div class="s5-bdot"></div><div class="s5-btxt">CLUSTER B · DAILY COMMUTERS</div></div>
+      <div class="s5-who">Lock in with subscriptions</div>
+      <div class="s5-line"></div>
+      <div class="s5-items">
+        <div class="s5-item"><div class="s5-arr">→</div><div class="s5-txt"><strong>Uber One</strong> free trial targeting</div></div>
+        <div class="s5-item"><div class="s5-arr">→</div><div class="s5-txt"><strong>Reserved rides</strong> for predictable routes</div></div>
+        <div class="s5-item"><div class="s5-arr">→</div><div class="s5-txt"><strong>Priority pickup</strong> as loyalty perk</div></div>
+      </div>
+    </div>
+
+    <div class="s5-card" style="--c:#FF6B35">
+      <div class="s5-badge"><div class="s5-bdot"></div><div class="s5-btxt">CLUSTER C · EATS POWER USERS</div></div>
+      <div class="s5-who">Reward and retain</div>
+      <div class="s5-line"></div>
+      <div class="s5-items">
+        <div class="s5-item"><div class="s5-arr">→</div><div class="s5-txt"><strong>Free delivery</strong> on 10th order</div></div>
+        <div class="s5-item"><div class="s5-arr">→</div><div class="s5-txt"><strong>Exclusive restaurant</strong> early access</div></div>
+        <div class="s5-item"><div class="s5-arr">→</div><div class="s5-txt">Upsell to <strong>rides</strong> via in-app cross-promo</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 
 </section>
