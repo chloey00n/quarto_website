@@ -1,70 +1,182 @@
 [
   {
-    "objectID": "projects/project1/5.html#section",
-    "href": "projects/project1/5.html#section",
+    "objectID": "projects/project5/index.html",
+    "href": "projects/project5/index.html",
+    "title": "What Drives Customer Satisfaction? A Key Drivers Analysis",
+    "section": "",
+    "text": "When a company runs a customer satisfaction survey, the natural follow-up question is: what actually drives satisfaction? Is it product quality, ease of use, brand trust, or something else? The challenge is that most drivers are correlated with each other, so simply looking at which variable has the highest correlation with satisfaction can be misleading.\nKey drivers analysis is a set of techniques for measuring the relative importance of each driver after accounting for the fact that predictors are correlated. Different methods make different assumptions and decompose explained variance in different ways — and a trustworthy analysis compares them side by side.\nIn this post we apply six methods to a customer satisfaction survey dataset (n = 2,553 respondents, 9 drivers) and replicate the variable importance table from class:\n\nPearson correlation — simple bivariate relationship\nStandardized regression coefficients — partial effects controlling for all others\nDrop-one usefulness — R² lost when each driver is removed\nShapley values — fair allocation of R² across all coalition orderings\nJohnson’s relative weights — variance decomposition via orthogonalization\nRandom forest Gini importance — nonlinear, tree-based importance"
+  },
+  {
+    "objectID": "projects/project5/index.html#introduction",
+    "href": "projects/project5/index.html#introduction",
+    "title": "What Drives Customer Satisfaction? A Key Drivers Analysis",
+    "section": "",
+    "text": "When a company runs a customer satisfaction survey, the natural follow-up question is: what actually drives satisfaction? Is it product quality, ease of use, brand trust, or something else? The challenge is that most drivers are correlated with each other, so simply looking at which variable has the highest correlation with satisfaction can be misleading.\nKey drivers analysis is a set of techniques for measuring the relative importance of each driver after accounting for the fact that predictors are correlated. Different methods make different assumptions and decompose explained variance in different ways — and a trustworthy analysis compares them side by side.\nIn this post we apply six methods to a customer satisfaction survey dataset (n = 2,553 respondents, 9 drivers) and replicate the variable importance table from class:\n\nPearson correlation — simple bivariate relationship\nStandardized regression coefficients — partial effects controlling for all others\nDrop-one usefulness — R² lost when each driver is removed\nShapley values — fair allocation of R² across all coalition orderings\nJohnson’s relative weights — variance decomposition via orthogonalization\nRandom forest Gini importance — nonlinear, tree-based importance"
+  },
+  {
+    "objectID": "projects/project5/index.html#the-data",
+    "href": "projects/project5/index.html#the-data",
+    "title": "What Drives Customer Satisfaction? A Key Drivers Analysis",
+    "section": "The Data",
+    "text": "The Data\n\n\nCode\ndf = pd.read_csv(\"data_for_drivers_analysis.csv\")\nprint(f\"Rows: {df.shape[0]}   Columns: {df.shape[1]}\")\nprint(f\"\\nOutcome  : {y_col}\")\nprint(f\"Drivers  : {x_cols}\")\nprint(f\"\\nSatisfaction range: {df[y_col].min()}–{df[y_col].max()}\")\nprint(f\"Driver variables  : binary (0/1) except satisfaction (1–5 scale)\")\ndf[x_cols + [y_col]].describe().round(3)\n\n\nRows: 2553   Columns: 12\n\nOutcome  : satisfaction\nDrivers  : ['trust', 'build', 'differs', 'easy', 'appealing', 'rewarding', 'popular', 'service', 'impact']\n\nSatisfaction range: 1–5\nDriver variables  : binary (0/1) except satisfaction (1–5 scale)\n\n\n\n\n\n\n\n\n\ntrust\nbuild\ndiffers\neasy\nappealing\nrewarding\npopular\nservice\nimpact\nsatisfaction\n\n\n\n\ncount\n2553.000\n2553.000\n2553.000\n2553.000\n2553.000\n2553.000\n2553.000\n2553.000\n2553.000\n2553.000\n\n\nmean\n0.550\n0.462\n0.335\n0.536\n0.451\n0.451\n0.536\n0.467\n0.331\n3.387\n\n\nstd\n0.498\n0.499\n0.472\n0.499\n0.498\n0.498\n0.499\n0.499\n0.471\n1.172\n\n\nmin\n0.000\n0.000\n0.000\n0.000\n0.000\n0.000\n0.000\n0.000\n0.000\n1.000\n\n\n25%\n0.000\n0.000\n0.000\n0.000\n0.000\n0.000\n0.000\n0.000\n0.000\n3.000\n\n\n50%\n1.000\n0.000\n0.000\n1.000\n0.000\n0.000\n1.000\n0.000\n0.000\n4.000\n\n\n75%\n1.000\n1.000\n1.000\n1.000\n1.000\n1.000\n1.000\n1.000\n1.000\n4.000\n\n\nmax\n1.000\n1.000\n1.000\n1.000\n1.000\n1.000\n1.000\n1.000\n1.000\n5.000\n\n\n\n\n\n\n\nThe outcome variable satisfaction is measured on a 1–5 scale. The nine driver variables are all binary (0 = no, 1 = yes), capturing whether each respondent agreed with statements about the brand across dimensions like trust, build quality, differentiation, ease of use, appeal, and so on.\n\n\n\n\n\n\n\n\nFigure 1: Correlation matrix of all variables. Drivers are moderately inter-correlated (0.2–0.5), making raw correlations with satisfaction potentially misleading — which motivates the need for methods that account for multicollinearity.\n\n\n\n\n\nThe drivers are moderately inter-correlated (typical for survey data), which means the choice of importance method matters: raw correlations will overstate the importance of variables that happen to correlate with other important drivers, while regression coefficients can understate the importance of variables that share variance with other predictors."
+  },
+  {
+    "objectID": "projects/project5/index.html#method-1-pearson-correlations",
+    "href": "projects/project5/index.html#method-1-pearson-correlations",
+    "title": "What Drives Customer Satisfaction? A Key Drivers Analysis",
+    "section": "Method 1: Pearson Correlations",
+    "text": "Method 1: Pearson Correlations\nThe simplest measure of importance: the bivariate correlation between each driver and satisfaction.\n\\[r_{X_j, Y} = \\frac{\\sum_i (X_{ij} - \\bar{X}_j)(Y_i - \\bar{Y})}{\\sqrt{\\sum_i (X_{ij} - \\bar{X}_j)^2 \\cdot \\sum_i (Y_i - \\bar{Y})^2}}\\]\nInterpretation: \\(r\\) ranges from −1 to +1. A larger positive value means the driver has a stronger raw association with satisfaction. The key limitation is that correlations do not control for other drivers — a driver can appear important simply because it correlates with a truly important driver.\n\n\nCode\npearson = {}\nfor j, col in enumerate(x_cols):\n    r, p = stats.pearsonr(df[col], df[y_col])\n    pearson[col] = {\"r\": r, \"p\": p}\n\npearson_df = pd.DataFrame(pearson).T.sort_values(\"r\", ascending=False)\nprint(pearson_df.round(4))\n\n\n                r    p\ntrust      0.2557  0.0\nimpact     0.2545  0.0\nservice    0.2511  0.0\neasy       0.2130  0.0\nappealing  0.2080  0.0\nrewarding  0.1946  0.0\nbuild      0.1919  0.0\ndiffers    0.1848  0.0\npopular    0.1714  0.0"
+  },
+  {
+    "objectID": "projects/project5/index.html#method-2-standardized-regression-coefficients",
+    "href": "projects/project5/index.html#method-2-standardized-regression-coefficients",
+    "title": "What Drives Customer Satisfaction? A Key Drivers Analysis",
+    "section": "Method 2: Standardized Regression Coefficients",
+    "text": "Method 2: Standardized Regression Coefficients\nWe regress satisfaction on all nine drivers simultaneously, after standardizing both the predictors and outcome to have mean 0 and standard deviation 1. This gives partial effects — the association between each driver and satisfaction holding all other drivers constant.\n\\[\\hat{Y}^* = \\beta_1 X_1^* + \\beta_2 X_2^* + \\cdots + \\beta_p X_p^*\\]\nwhere \\(^*\\) denotes standardization. Because all variables are on the same scale, \\(|\\beta_j|\\) is directly comparable across drivers.\nLimitation: When predictors are correlated, variance shared between them is not allocated to any single predictor — it simply “disappears” from individual coefficients. This leads to underestimation of important-but-correlated drivers.\n\n\nCode\nlr_full = LinearRegression().fit(X_sc, y_sc)\nstd_coef = dict(zip(x_cols, lr_full.coef_))\nr2_full  = lr_full.score(X_sc, y_sc)\n\nprint(f\"Full model R² = {r2_full:.4f}\")\nprint()\nfor k, v in sorted(std_coef.items(), key=lambda x: -abs(x[1])):\n    print(f\"  {k:&lt;12}: {v:+.4f}\")\n\n\nFull model R² = 0.1090\n\n  impact      : +0.1284\n  trust       : +0.1158\n  service     : +0.0884\n  appealing   : +0.0338\n  differs     : +0.0278\n  easy        : +0.0220\n  build       : +0.0200\n  popular     : +0.0166\n  rewarding   : +0.0051\n\n\nThe full model R² = 0.109 — meaning the nine drivers together explain about 10.9% of the variance in satisfaction. Notice that several coefficients are near zero: this reflects suppression from multicollinearity, not genuine unimportance."
+  },
+  {
+    "objectID": "projects/project5/index.html#method-3-drop-one-usefulness",
+    "href": "projects/project5/index.html#method-3-drop-one-usefulness",
+    "title": "What Drives Customer Satisfaction? A Key Drivers Analysis",
+    "section": "Method 3: Drop-One Usefulness",
+    "text": "Method 3: Drop-One Usefulness\nFor each driver, we ask: how much does R² drop if we remove this driver from the full model?\n\\[\\text{Usefulness}_j = R^2_{\\text{full}} - R^2_{-j}\\]\nwhere \\(R^2_{-j}\\) is the R² of the model with driver \\(j\\) removed. This measures the unique contribution of each driver — the variance it explains that no other driver can account for.\nAdvantage over coefficients: Usefulness is always non-negative and directly interpretable as variance explained. Limitation: It ignores shared variance (variance that could be explained by multiple drivers).\n\n\nCode\nusefulness = {}\nfor j, col in enumerate(x_cols):\n    X_drop   = np.delete(X_sc, j, axis=1)\n    r2_drop  = LinearRegression().fit(X_drop, y_sc).score(X_drop, y_sc)\n    usefulness[col] = r2_full - r2_drop\n\nprint(f\"Full R² = {r2_full:.4f}   |   Sum of usefulness = {sum(usefulness.values()):.4f}\")\nprint()\nfor k, v in sorted(usefulness.items(), key=lambda x: -x[1]):\n    print(f\"  {k:&lt;12}: {v:.4f}  ({v/r2_full*100:.1f}% of R²)\")\n\n\nFull R² = 0.1090   |   Sum of usefulness = 0.0262\n\n  impact      : 0.0112  (10.3% of R²)\n  trust       : 0.0082  (7.6% of R²)\n  service     : 0.0047  (4.3% of R²)\n  appealing   : 0.0007  (0.7% of R²)\n  differs     : 0.0006  (0.5% of R²)\n  easy        : 0.0003  (0.3% of R²)\n  build       : 0.0003  (0.2% of R²)\n  popular     : 0.0002  (0.2% of R²)\n  rewarding   : 0.0000  (0.0% of R²)\n\n\nNote that the sum of usefulnesses is much less than R² — the remainder is shared variance that multiple drivers can explain, and drop-one doesn’t allocate it to anyone."
+  },
+  {
+    "objectID": "projects/project5/index.html#method-4-shapley-values-own-implementation",
+    "href": "projects/project5/index.html#method-4-shapley-values-own-implementation",
+    "title": "What Drives Customer Satisfaction? A Key Drivers Analysis",
+    "section": "Method 4: Shapley Values (Own Implementation)",
+    "text": "Method 4: Shapley Values (Own Implementation)\nShapley values come from cooperative game theory. The idea: treat each driver as a “player” and R² as the “prize.” For each possible coalition (subset) of drivers, compute R². Then each driver’s Shapley value is its average marginal contribution across all possible orderings of players entering the coalition.\n\\[\\phi_j = \\sum_{S \\subseteq N \\setminus \\{j\\}} \\frac{|S|!\\,(|N|-|S|-1)!}{|N|!} \\left[ R^2(S \\cup \\{j\\}) - R^2(S) \\right]\\]\nKey property: Shapley values are the unique method that simultaneously satisfies: - Efficiency: values sum to R² - Symmetry: equally contributing drivers get equal values - Dummy: a useless driver gets zero - Additivity: consistent decomposition\nThis is the “fairest” allocation of R² across correlated predictors.\n\n\nCode\n# Precompute R² for all 2^9 = 512 subsets\nn_feat = len(x_cols)\nall_r2  = {}\n\ndef r2_subset(indices):\n    if len(indices) == 0:\n        return 0.0\n    return LinearRegression().fit(X_sc[:, list(indices)], y_sc).score(\n           X_sc[:, list(indices)], y_sc)\n\nprint(\"Precomputing R² for all 512 subsets...\")\nfor r in range(n_feat + 1):\n    for subset in itertools.combinations(range(n_feat), r):\n        all_r2[subset] = r2_subset(subset)\n\n# Compute Shapley value for each driver\nshapley = {}\nfor j in range(n_feat):\n    sv      = 0.0\n    others  = [i for i in range(n_feat) if i != j]\n    for r in range(n_feat):\n        for subset in itertools.combinations(others, r):\n            s      = len(subset)\n            weight = math.factorial(s) * math.factorial(n_feat - s - 1) / math.factorial(n_feat)\n            r2_with    = all_r2[tuple(sorted(list(subset) + [j]))]\n            r2_without = all_r2[tuple(sorted(list(subset)))]\n            sv += weight * (r2_with - r2_without)\n    shapley[x_cols[j]] = sv\n\nprint(f\"\\nShapley values sum = {sum(shapley.values()):.4f}  (R² = {r2_full:.4f}  ✓)\")\nfor k, v in sorted(shapley.items(), key=lambda x: -x[1]):\n    print(f\"  {k:&lt;12}: {v:.4f}  ({v/r2_full*100:.1f}% of R²)\")\n\n\nPrecomputing R² for all 512 subsets...\n\nShapley values sum = 0.1090  (R² = 0.1090  ✓)\n  impact      : 0.0236  (21.6% of R²)\n  trust       : 0.0216  (19.8% of R²)\n  service     : 0.0184  (16.9% of R²)\n  easy        : 0.0093  (8.5% of R²)\n  appealing   : 0.0092  (8.4% of R²)\n  differs     : 0.0073  (6.7% of R²)\n  build       : 0.0072  (6.6% of R²)\n  rewarding   : 0.0068  (6.3% of R²)\n  popular     : 0.0056  (5.2% of R²)\n\n\nShapley values distribute the entire R² (including shared variance) fairly across all drivers. Unlike usefulness, every driver gets credit for the variance it could explain, even if other drivers can explain it too."
+  },
+  {
+    "objectID": "projects/project5/index.html#method-5-johnsons-relative-weights",
+    "href": "projects/project5/index.html#method-5-johnsons-relative-weights",
+    "title": "What Drives Customer Satisfaction? A Key Drivers Analysis",
+    "section": "Method 5: Johnson’s Relative Weights",
+    "text": "Method 5: Johnson’s Relative Weights\nJohnson’s (2000) method orthogonalizes the predictors via eigendecomposition of the predictor correlation matrix, regresses the outcome on the orthogonal factors, then maps the variance back to the original predictors.\nSteps: 1. Eigendecompose \\(\\mathbf{R}_{XX} = \\mathbf{V} \\boldsymbol{\\Lambda} \\mathbf{V}^\\top\\) 2. Form orthogonal predictors \\(\\mathbf{Z} = \\mathbf{X}^* \\mathbf{V}\\) 3. Regress \\(Y^*\\) on \\(\\mathbf{Z}\\) to get coefficients \\(\\hat{\\boldsymbol{\\beta}}_Z\\) 4. Compute relative weight: \\(\\text{RW}_j = \\sum_k \\left(V_{jk} \\sqrt{\\lambda_k} \\,\\hat\\beta_{Z_k}\\right)^2\\)\nKey property: Like Shapley, relative weights sum exactly to R². Unlike Shapley, they are computationally fast (no \\(2^p\\) subsets needed).\n\n\nCode\nRxx           = np.corrcoef(X_sc.T)\neigvals, eigvecs = np.linalg.eigh(Rxx)\n\n# Orthogonal factor scores\nZ      = X_sc @ eigvecs                                    # (n × p)\nlr_z   = LinearRegression(fit_intercept=False).fit(Z, y_sc)\nbeta_z = lr_z.coef_                                        # (p,)\n\n# Relative weight for predictor j\nrw_raw = np.zeros(n_feat)\nfor j in range(n_feat):\n    for k in range(n_feat):\n        rw_raw[j] += (eigvecs[j, k] * np.sqrt(eigvals[k]) * beta_z[k])**2\n\njohnson_rw = dict(zip(x_cols, rw_raw))\nprint(f\"Relative weights sum = {rw_raw.sum():.4f}  (R² = {r2_full:.4f}  ✓)\")\nfor k, v in sorted(johnson_rw.items(), key=lambda x: -x[1]):\n    print(f\"  {k:&lt;12}: {v:.4f}  ({v/r2_full*100:.1f}% of R²)\")\n\n\nRelative weights sum = 0.1090  (R² = 0.1090  ✓)\n  service     : 0.0141  (12.9% of R²)\n  build       : 0.0135  (12.4% of R²)\n  rewarding   : 0.0133  (12.2% of R²)\n  trust       : 0.0130  (12.0% of R²)\n  easy        : 0.0128  (11.8% of R²)\n  appealing   : 0.0124  (11.4% of R²)\n  impact      : 0.0117  (10.7% of R²)\n  differs     : 0.0091  (8.4% of R²)\n  popular     : 0.0091  (8.3% of R²)"
+  },
+  {
+    "objectID": "projects/project5/index.html#method-6-random-forest-gini-importance",
+    "href": "projects/project5/index.html#method-6-random-forest-gini-importance",
+    "title": "What Drives Customer Satisfaction? A Key Drivers Analysis",
+    "section": "Method 6: Random Forest Gini Importance",
+    "text": "Method 6: Random Forest Gini Importance\nRandom forests build an ensemble of decision trees on bootstrap samples. At each split, the algorithm selects the feature that most reduces node impurity (measured by Gini for classification, MSE for regression). Mean decrease in impurity sums this reduction across all trees, normalized to sum to 1.\nAdvantages over regression-based methods: - Captures nonlinear relationships and interactions - No assumption of linearity or additivity - Naturally handles correlated predictors through random feature subsampling\nLimitation: Gini importance is on a different scale (sums to 1, not R²), so it’s a relative ranking rather than a variance decomposition.\n\n\nCode\nrf = RandomForestRegressor(n_estimators=500, random_state=42, n_jobs=-1)\nrf.fit(X, y)\ngini_imp = dict(zip(x_cols, rf.feature_importances_))\n\nprint(\"Random Forest Gini Importance (sums to 1.0):\")\nfor k, v in sorted(gini_imp.items(), key=lambda x: -x[1]):\n    print(f\"  {k:&lt;12}: {v:.4f}  ({v*100:.1f}%)\")\n\n\nRandom Forest Gini Importance (sums to 1.0):\n  trust       : 0.1523  (15.2%)\n  impact      : 0.1396  (14.0%)\n  service     : 0.1361  (13.6%)\n  rewarding   : 0.1055  (10.5%)\n  build       : 0.0997  (10.0%)\n  easy        : 0.0973  (9.7%)\n  popular     : 0.0953  (9.5%)\n  differs     : 0.0896  (9.0%)\n  appealing   : 0.0847  (8.5%)"
+  },
+  {
+    "objectID": "projects/project5/index.html#the-full-comparison-table",
+    "href": "projects/project5/index.html#the-full-comparison-table",
+    "title": "What Drives Customer Satisfaction? A Key Drivers Analysis",
+    "section": "The Full Comparison Table",
+    "text": "The Full Comparison Table\n\n\n\n\n\n\n\nDriver\nPearson r\nStd. Coef.\nUsefulness\nShapley\nJohnson RW\nRF Gini\n\n\n\n\nImpact\n+0.2545\n+0.1284\n0.0112\n0.0236\n0.0117\n0.1396\n\n\nTrust\n+0.2557\n+0.1158\n0.0082\n0.0216\n0.0130\n0.1523\n\n\nService\n+0.2511\n+0.0884\n0.0047\n0.0184\n0.0141\n0.1361\n\n\nEasy\n+0.2130\n+0.0220\n0.0003\n0.0093\n0.0128\n0.0973\n\n\nAppealing\n+0.2080\n+0.0338\n0.0007\n0.0092\n0.0124\n0.0847\n\n\nDiffers\n+0.1848\n+0.0278\n0.0006\n0.0073\n0.0091\n0.0896\n\n\nBuild\n+0.1919\n+0.0200\n0.0003\n0.0072\n0.0135\n0.0997\n\n\nRewarding\n+0.1946\n+0.0051\n0.0000\n0.0068\n0.0133\n0.1055\n\n\nPopular\n+0.1714\n+0.0166\n0.0002\n0.0056\n0.0091\n0.0953\n\n\n\n\n\nSorted by Shapley value. Green = top 2 drivers. Red = bottom 2 drivers.\nFull model R² = 0.1090. Pearson r and RF Gini are on different scales (not directly comparable to R²-based methods).\n\n\n\n\n\n\n\n\n\n\n\nFigure 2: Side-by-side comparison of all six importance methods. Items are ordered by Shapley rank in all panels. Impact and Trust consistently emerge as the top two drivers across all methods."
+  },
+  {
+    "objectID": "projects/project5/index.html#discussion",
+    "href": "projects/project5/index.html#discussion",
+    "title": "What Drives Customer Satisfaction? A Key Drivers Analysis",
+    "section": "Discussion",
+    "text": "Discussion\n\nWhat the Methods Agree On\nAll six methods consistently identify Impact and Trust as the top two drivers of customer satisfaction, and Popular and Rewarding as the least important. This consensus across methodologically diverse approaches provides high confidence in the ranking at the extremes.\n\n\nWhere the Methods Disagree — and Why\nThe middle tier (Build, Differs, Easy, Appealing, Service) shows more variation across methods. This is expected: these drivers are more correlated with each other and with the top drivers, so the choice of how to allocate shared variance matters.\nPearson correlations are highest for Trust (0.256), Service (0.251), and Impact (0.255) — all nearly tied. This masks the fact that Impact has a much larger partial effect once other drivers are controlled for.\nStandardized coefficients for Impact (0.128) and Trust (0.116) are far larger than for any other driver. But Build (0.020) and Easy (0.022) look nearly irrelevant — likely because their variance is shared with Trust and Impact, which dominate the regression.\nDrop-one usefulness tells a similar story but is even more extreme: Impact (0.011) and Trust (0.008) account for nearly all unique variance, while most other drivers contribute almost nothing uniquely. This reflects multicollinearity — when important drivers are in the model, correlated lesser drivers add little.\nShapley values provide the most balanced picture. By averaging over all possible orderings, they allocate shared variance proportionally. Trust (0.022) and Impact (0.024) still lead, but Service (0.018) gets more credit than in the regression or usefulness approaches, because it can explain variance that builds or differs cannot.\nJohnson’s relative weights are notably more even across drivers than the other R²-based methods. This is a known property: the orthogonalization step distributes shared variance more aggressively. In highly correlated survey data like this, this can either be a feature (guards against undervaluing correlated drivers) or a limitation (may overstate the importance of drivers that are only important because they correlate with truly important ones).\nRandom forest Gini picks up Impact (0.140) and Trust (0.152) as top drivers — consistent with all other methods — and identifies Service (0.136) as important, likely because its relationship with satisfaction involves nonlinear patterns that the linear models underweight.\n\n\nWhich Method Should You Use?\n\n\n\nGoal\nRecommended Method\n\n\n\n\nQuick sanity check\nPearson r\n\n\nPartial effects, statistical inference\nStd. Coef.\n\n\nUnique contribution only\nUsefulness\n\n\nFair allocation of all variance\nShapley\n\n\nFast approximation to Shapley\nJohnson RW\n\n\nNonlinear, interaction-aware\nRF Gini\n\n\n\nFor a business audience, Shapley values are the most defensible single method: they have a clear theoretical justification (fair allocation), always sum to R², and avoid both the underestimation problem of regression coefficients and the overestimation problem of raw correlations. For exploratory work or when computational cost matters, Johnson’s relative weights are an excellent approximation.\n\n\nBusiness Recommendation\nBased on the convergent evidence across all six methods, the clearest recommendation is: prioritize improving Impact and Trust. These two drivers consistently rank #1 and #2 regardless of method, and together account for roughly 44% of the explained variance (by Shapley). Service is a secondary priority — it consistently ranks 3rd or 4th and appears to have nonlinear effects captured by the random forest. The bottom three drivers (Popular, Rewarding, Build) show weak and inconsistent importance across methods; resources invested here are unlikely to move the satisfaction needle."
+  },
+  {
+    "objectID": "projects/project2/index.html",
+    "href": "projects/project2/index.html",
+    "title": "Replicating Card and Krueger (1994)",
+    "section": "",
+    "text": "Card and Krueger (1994) study whether a rise in the minimum wage reduces employment in the fast-food industry. In April 1992, New Jersey increased its minimum wage from $4.25 to $5.05, while neighboring Pennsylvania did not change its minimum wage.\nThis setting creates a natural experiment. By comparing employment changes in fast-food restaurants in New Jersey and Pennsylvania before and after the policy change, the paper estimates the causal effect of the minimum wage on employment. The paper’s main finding is that the increase in the minimum wage did not reduce employment."
+  },
+  {
+    "objectID": "projects/project2/index.html#introduction",
+    "href": "projects/project2/index.html#introduction",
+    "title": "Replicating Card and Krueger (1994)",
+    "section": "",
+    "text": "Card and Krueger (1994) study whether a rise in the minimum wage reduces employment in the fast-food industry. In April 1992, New Jersey increased its minimum wage from $4.25 to $5.05, while neighboring Pennsylvania did not change its minimum wage.\nThis setting creates a natural experiment. By comparing employment changes in fast-food restaurants in New Jersey and Pennsylvania before and after the policy change, the paper estimates the causal effect of the minimum wage on employment. The paper’s main finding is that the increase in the minimum wage did not reduce employment."
+  },
+  {
+    "objectID": "projects/project2/index.html#data-and-setup",
+    "href": "projects/project2/index.html#data-and-setup",
+    "title": "Replicating Card and Krueger (1994)",
+    "section": "Data and Setup",
+    "text": "Data and Setup\nThe dataset contains 410 fast-food restaurants from New Jersey and Pennsylvania. The codebook shows that public.dat is a fixed-width file, so I read it using column positions from the codebook.\n\nimport pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n\ncolspecs = [\n    (0, 3),    # SHEET\n    (4, 5),    # CHAIN\n    (6, 7),    # CO_OWNED\n    (8, 9),    # STATE\n    (10, 11),  # SOUTHJ\n    (12, 13),  # CENTRALJ\n    (14, 15),  # NORTHJ\n    (16, 17),  # PA1\n    (18, 19),  # PA2\n    (20, 21),  # SHORE\n    (22, 24),  # NCALLS\n    (25, 30),  # EMPFT\n    (31, 36),  # EMPPT\n    (37, 42),  # NMGRS\n    (43, 48),  # WAGE_ST\n    (49, 54),  # INCTIME\n    (55, 60),  # FIRSTINC\n    (61, 62),  # BONUS\n    (63, 68),  # PCTAFF\n    (69, 70),  # MEALS\n    (71, 76),  # OPEN\n    (77, 82),  # HRSOPEN\n    (83, 88),  # PSODA\n    (89, 94),  # PFRY\n    (95, 100), # PENTREE\n    (101, 103),# NREGS\n    (104, 106),# NREGS11\n    (107, 108),# TYPE2\n    (109, 110),# STATUS2\n    (111, 117),# DATE2\n    (118, 120),# NCALLS2\n    (121, 126),# EMPFT2\n    (127, 132),# EMPPT2\n    (133, 138),# NMGRS2\n    (139, 144),# WAGE_ST2\n    (145, 150),# INCTIME2\n    (151, 156),# FIRSTIN2\n    (157, 158),# SPECIAL2\n    (159, 160),# MEALS2\n    (161, 166),# OPEN2R\n    (167, 172),# HRSOPEN2\n    (173, 178),# PSODA2\n    (179, 184),# PFRY2\n    (185, 190),# PENTREE2\n    (191, 193),# NREGS2\n    (194, 196) # NREGS112\n]\n\nnames = [\n    \"sheet\",\"chain\",\"co_owned\",\"state\",\"southj\",\"centralj\",\"northj\",\"pa1\",\"pa2\",\"shore\",\n    \"ncalls\",\"empft\",\"emppt\",\"nmgrs\",\"wage_st\",\"inctime\",\"firstinc\",\"bonus\",\"pctaff\",\n    \"meals\",\"open\",\"hrsopen\",\"psoda\",\"pfry\",\"pentree\",\"nregs\",\"nregs11\",\n    \"type2\",\"status2\",\"date2\",\"ncalls2\",\"empft2\",\"emppt2\",\"nmgrs2\",\"wage_st2\",\n    \"inctime2\",\"firstin2\",\"special2\",\"meals2\",\"open2r\",\"hrsopen2\",\"psoda2\",\n    \"pfry2\",\"pentree2\",\"nregs2\",\"nregs112\"\n]\n\ndf = pd.read_fwf(\"public.dat\", colspecs=colspecs, names=names)\ndf.head()\n\n\n\n\n\n\n\n\nsheet\nchain\nco_owned\nstate\nsouthj\ncentralj\nnorthj\npa1\npa2\nshore\n...\nfirstin2\nspecial2\nmeals2\nopen2r\nhrsopen2\npsoda2\npfry2\npentree2\nnregs2\nnregs112\n\n\n\n\n0\n46\n1\n0\n0\n0\n0\n0\n1\n0\n0\n...\n0.08\n1\n2\n6.50\n16.50\n1.03\n.\n0.94\n4\n4\n\n\n1\n49\n2\n0\n0\n0\n0\n0\n1\n0\n0\n...\n0.05\n0\n2\n10.00\n13.00\n1.01\n0.89\n2.35\n4\n4\n\n\n2\n506\n2\n1\n0\n0\n0\n0\n1\n0\n0\n...\n0.25\n.\n1\n11.00\n11.00\n0.95\n0.74\n2.33\n4\n3\n\n\n3\n56\n4\n1\n0\n0\n0\n0\n1\n0\n0\n...\n0.15\n0\n2\n10.00\n12.00\n0.92\n0.79\n0.87\n2\n2\n\n\n4\n61\n4\n1\n0\n0\n0\n0\n1\n0\n0\n...\n0.15\n0\n2\n10.00\n12.00\n1.01\n0.84\n0.95\n2\n2\n\n\n\n\n5 rows × 46 columns"
+  },
+  {
+    "objectID": "projects/project2/index.html#cleaning-the-data",
+    "href": "projects/project2/index.html#cleaning-the-data",
+    "title": "Replicating Card and Krueger (1994)",
+    "section": "Cleaning the Data",
+    "text": "Cleaning the Data\nFollowing the paper, I construct full-time-equivalent employment as:\n\\[\nFTE = \\text{full-time workers} + 0.5 \\times \\text{part-time workers} + \\text{managers}\n\\]\nFor stores that were permanently closed in the second wave, employment is set to 0.\n\n# convert everything numeric just in case\nfor c in df.columns:\n    df[c] = pd.to_numeric(df[c], errors=\"coerce\")\n\n# state label\ndf[\"state_name\"] = np.where(df[\"state\"] == 1, \"NJ\", \"PA\")\n\n# before and after employment\ndf[\"fte_before\"] = df[\"empft\"] + 0.5 * df[\"emppt\"] + df[\"nmgrs\"]\n\ndf[\"fte_after\"] = df[\"empft2\"] + 0.5 * df[\"emppt2\"] + df[\"nmgrs2\"]\n\n# set employment to 0 for stores coded as permanently closed / other closures\ndf.loc[df[\"status2\"].isin([3, 4, 5]), \"fte_after\"] = 0\n\n# keep stores with observed first-wave employment\ndf[[\"state_name\", \"fte_before\", \"fte_after\", \"wage_st\", \"wage_st2\", \"status2\"]].head()\n\n\n\n\n\n\n\n\nstate_name\nfte_before\nfte_after\nwage_st\nwage_st2\nstatus2\n\n\n\n\n0\nPA\n40.50\n24.0\nNaN\n4.30\n1\n\n\n1\nPA\n13.75\n11.5\nNaN\n4.45\n1\n\n\n2\nPA\n8.50\n10.5\nNaN\n5.00\n1\n\n\n3\nPA\n34.00\n20.0\n5.0\n5.25\n1\n\n\n4\nPA\n24.00\n35.5\n5.5\n4.75\n1"
+  },
+  {
+    "objectID": "projects/project2/index.html#replicating-a-main-result",
+    "href": "projects/project2/index.html#replicating-a-main-result",
+    "title": "Replicating Card and Krueger (1994)",
+    "section": "Replicating a Main Result",
+    "text": "Replicating a Main Result\nA simple way to replicate the paper is to compare average employment before and after the minimum wage increase in New Jersey and Pennsylvania.\n\nsummary = df.groupby(\"state_name\")[[\"fte_before\", \"fte_after\"]].mean().round(3)\nsummary[\"change\"] = (summary[\"fte_after\"] - summary[\"fte_before\"]).round(3)\nsummary\n\n\n\n\n\n\n\n\nfte_before\nfte_after\nchange\n\n\nstate_name\n\n\n\n\n\n\n\nNJ\n20.439\n20.896\n0.457\n\n\nPA\n23.331\n21.166\n-2.165\n\n\n\n\n\n\n\nThis table shows the average employment level in each state before and after the policy change."
+  },
+  {
+    "objectID": "projects/project2/index.html#difference-in-differences-estimate",
+    "href": "projects/project2/index.html#difference-in-differences-estimate",
+    "title": "Replicating Card and Krueger (1994)",
+    "section": "Difference-in-Differences Estimate",
+    "text": "Difference-in-Differences Estimate\nThe key comparison is the difference-in-differences estimate:\n\\[\n(\\text{NJ after} - \\text{NJ before}) - (\\text{PA after} - \\text{PA before})\n\\]\n\nnj_before = df.loc[df[\"state_name\"] == \"NJ\", \"fte_before\"].mean()\nnj_after  = df.loc[df[\"state_name\"] == \"NJ\", \"fte_after\"].mean()\n\npa_before = df.loc[df[\"state_name\"] == \"PA\", \"fte_before\"].mean()\npa_after  = df.loc[df[\"state_name\"] == \"PA\", \"fte_after\"].mean()\n\ndid = (nj_after - nj_before) - (pa_after - pa_before)\n\nprint(\"NJ before:\", round(nj_before, 3))\nprint(\"NJ after: \", round(nj_after, 3))\nprint(\"PA before:\", round(pa_before, 3))\nprint(\"PA after: \", round(pa_after, 3))\nprint(\"Difference-in-differences estimate:\", round(did, 3))\n\nNJ before: 20.439\nNJ after:  20.896\nPA before: 23.331\nPA after:  21.166\nDifference-in-differences estimate: 2.623\n\n\nIf this estimate is positive or close to zero, it supports the paper’s main conclusion that the increase in the minimum wage did not reduce employment."
+  },
+  {
+    "objectID": "projects/project2/index.html#additional-analysis-a-graph",
+    "href": "projects/project2/index.html#additional-analysis-a-graph",
+    "title": "Replicating Card and Krueger (1994)",
+    "section": "Additional Analysis: A Graph",
+    "text": "Additional Analysis: A Graph\nAs an additional analysis, I present the employment changes graphically.\n\nplot_df = summary[[\"fte_before\", \"fte_after\"]].T\nplot_df.index = [\"Before\", \"After\"]\n\nplot_df.plot(marker=\"o\", figsize=(8,5))\nplt.title(\"Average Fast-Food Employment Before and After the NJ Minimum Wage Increase\")\nplt.xlabel(\"Survey Wave\")\nplt.ylabel(\"Average Full-Time-Equivalent Employment\")\nplt.grid(True, alpha=0.3)\nplt.show()\n\n\n\n\n\n\n\n\nThe graph makes the comparison more intuitive. If New Jersey employment had fallen sharply relative to Pennsylvania, we would expect to see a noticeably worse trend for New Jersey after the policy change. Instead, the pattern is much more consistent with the original paper’s conclusion."
+  },
+  {
+    "objectID": "projects/project2/index.html#interpretation",
+    "href": "projects/project2/index.html#interpretation",
+    "title": "Replicating Card and Krueger (1994)",
+    "section": "Interpretation",
+    "text": "Interpretation\nThe difference-in-differences estimate compares the employment change in New Jersey to the employment change in Pennsylvania. This helps account for broader economic conditions that affected both states at the same time.\nMy replication supports the paper’s main finding: the New Jersey minimum wage increase did not lead to a decline in employment in fast-food restaurants."
+  },
+  {
+    "objectID": "projects/project2/index.html#conclusion",
+    "href": "projects/project2/index.html#conclusion",
+    "title": "Replicating Card and Krueger (1994)",
+    "section": "Conclusion",
+    "text": "Conclusion\nThis replication revisits one of the most influential papers in empirical economics. Card and Krueger (1994) challenged the conventional view that higher minimum wages necessarily reduce employment.\nUsing the New Jersey-Pennsylvania fast-food dataset, I replicated the core comparison in the paper and visualized the employment changes. The results are consistent with the original study and illustrate the value of natural experiments for causal inference."
+  },
+  {
+    "objectID": "projects.html",
+    "href": "projects.html",
+    "title": "Projects",
+    "section": "",
+    "text": "Does Blueprinty’s Software Actually Help Engineers Win More Patents?\n\n\nA Step-by-Step Guide to Poisson Regression via Maximum Likelihood Estimation\n\n\n\nJihee Yoon\n\n\nJun 7, 2026\n\n\n\n\n\n\n\n\n\n\nWhich MSBA Classes Do Students Actually Want?\n\n\nMaxDiff Survey Analysis via Counts, MLE, and Bayesian MNL\n\n\n\nJihee Yoon\n\n\nJun 7, 2026\n\n\n\n\n\n\n\n\n\n\nWhat Drives Customer Satisfaction? A Key Drivers Analysis\n\n\nComparing Six Variable Importance Methods on Customer Survey Data\n\n\n\nJihee Yoon\n\n\nJun 7, 2026\n\n\n\n\n\n\n\n\n\n\nReplicating Card and Krueger (1994)\n\n\nMinimum Wages and Employment in New Jersey and Pennsylvania\n\n\n\nJihee Yoon\n\n\nJun 7, 2026\n\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "projects/project1/uber_segmentation.html#section",
+    "href": "projects/project1/uber_segmentation.html#section",
     "title": "Jihee Yoon",
     "section": "",
     "text": "How K-Means Turns DataInto Marketing Decisions\n  One algorithm, three clusters, infinite marketing decisions — a step-by-step visual walkthrough using Uber.\n\n  Today we'll see how these 3 customer groups are created\n  \n    Weekend Riders\n    Daily Commuters\n    Eats Power Users\n  \n\n  Jihee Yoon\n  click to reveal ↓"
   },
   {
-    "objectID": "projects/project1/5.html#section-1",
-    "href": "projects/project1/5.html#section-1",
+    "objectID": "projects/project1/uber_segmentation.html#section-1",
+    "href": "projects/project1/uber_segmentation.html#section-1",
     "title": "Jihee Yoon",
     "section": "",
     "text": "Real World\n  Why segmentation matters\n  \n    \n      \n        \n          \n            \n            Every market has heterogeneous customers — different needs, different willingness to pay, different behavior patterns.\n          \n          \n            \n            A single product or message aimed at the \"average\" customer ends up resonating with nobody — you leave value on the table.\n          \n          \n            \n            Segmentation lets you allocate resources where they have the highest return — high-LTV segments get retention spend, price-sensitive segments get promotions.\n          \n        \n      \n\n      \n        A good segmentation is\n        \n          Relevant\n          Identifiable\n          Actionable\n          Substantial\n          Accessible\n        \n      \n    \n\n    \n      \n        🎬\n        \n          Netflix\n          Segments users by watch behavior — binge watchers, casual viewers, movie lovers — to personalize thumbnails and recommendations per profile.\n          ↑ Reduces churn by keeping each segment engaged differently\n        \n      \n      \n        🚗\n        \n          Uber\n          Identifies rider archetypes from trip frequency, timing, and spend — then sends targeted promos: discounts to casuals, subscriptions to commuters.\n          ↑ Today's example — let's see how K-means builds these segments"
   },
   {
-    "objectID": "projects/project1/5.html#section-2",
-    "href": "projects/project1/5.html#section-2",
+    "objectID": "projects/project1/uber_segmentation.html#section-2",
+    "href": "projects/project1/uber_segmentation.html#section-2",
     "title": "Jihee Yoon",
     "section": "",
     "text": "Segmentation at Uber\n  Example: What do Uber's segments look like?\n  Clusters are just math — profiling gives them meaning the business can act on\n  \n\n    \n      Cluster A\n      🚗\n      Weekend Riders\n      \n        Trips / month3–4\n        Peak timeFri–Sat night\n        Price sensitivityHigh\n        Eats usageRare\n        LTVLow–Medium\n      \n      \n        \n        Activate with discount codes\n      \n    \n\n    \n      Cluster B\n      💼\n      Daily Commuters\n      \n        Trips / month20–22\n        Peak timeMon–Fri 8am/6pm\n        Price sensitivityLow\n        Eats usageModerate\n        LTVHigh\n      \n      \n        \n        Lock in with Uber One subscription\n      \n    \n\n    \n      Cluster C\n      🍔\n      Eats Power Users\n      \n        Orders / month16–20\n        Peak timeLunch & dinner daily\n        Price sensitivityMedium\n        Rides usageOccasional\n        LTVVery High\n      \n      \n        \n        Reward & retain with loyalty perks"
   },
   {
-    "objectID": "projects/project1/5.html#section-3",
-    "href": "projects/project1/5.html#section-3",
+    "objectID": "projects/project1/uber_segmentation.html#section-3",
+    "href": "projects/project1/uber_segmentation.html#section-3",
     "title": "Jihee Yoon",
     "section": "",
     "text": "K-Means Algorithm\n    Clusteringin 4 steps\n    \n      \n        1\n        Place centroidsPick K random starting points\n      \n      \n        2\n        Assign pointsEach point → nearest centroid\n      \n      \n        3\n        Move centroidsRecompute cluster means\n      \n      \n        4\n        RepeatUntil assignments stabilize\n      \n    \n  \n  \n    \n    \n      Next Step ▶\n      Reset"
   },
   {
-    "objectID": "projects/project1/5.html#section-4",
-    "href": "projects/project1/5.html#section-4",
-    "title": "Jihee Yoon",
-    "section": "",
-    "text": "Segmentation → Action\n  Different segments, different strategies\n  Segmentation is only valuable when it changes decisions.\n  \n\n    \n      CLUSTER A · WEEKEND RIDERS\n      Activate with discounts\n      \n      \n        →$5 off Friday night push notification\n        →Referral bonus to grow the casual base\n        →Retarget on Instagram / TikTok\n      \n    \n\n    \n      CLUSTER B · DAILY COMMUTERS\n      Lock in with subscriptions\n      \n      \n        →Uber One free trial targeting\n        →Reserved rides for predictable routes\n        →Priority pickup as loyalty perk\n      \n    \n\n    \n      CLUSTER C · EATS POWER USERS\n      Reward and retain\n      \n      \n        →Free delivery on 10th order\n        →Exclusive restaurant early access\n        →Upsell to rides via in-app cross-promo"
-  },
-  {
-    "objectID": "projects/project1/6.html#section",
-    "href": "projects/project1/6.html#section",
-    "title": "Jihee Yoon",
-    "section": "",
-    "text": "How K-Means Turns DataInto Marketing Decisions\n  One algorithm, three clusters, infinite marketing decisions — a step-by-step visual walkthrough using Uber.\n\n  Today we'll see how these 3 customer groups are created\n  \n    Weekend Riders\n    Daily Commuters\n    Eats Power Users\n  \n\n  Jihee Yoon\n  click to reveal ↓"
-  },
-  {
-    "objectID": "projects/project1/6.html#section-1",
-    "href": "projects/project1/6.html#section-1",
-    "title": "Jihee Yoon",
-    "section": "",
-    "text": "Real World\n  Why segmentation matters\n  \n    \n      \n        \n          \n            \n            Every market has heterogeneous customers — different needs, different willingness to pay, different behavior patterns.\n          \n          \n            \n            A single product or message aimed at the \"average\" customer ends up resonating with nobody — you leave value on the table.\n          \n          \n            \n            Segmentation lets you allocate resources where they have the highest return — high-LTV segments get retention spend, price-sensitive segments get promotions.\n          \n        \n      \n\n      \n        A good segmentation is\n        \n          Relevant\n          Identifiable\n          Actionable\n          Substantial\n          Accessible\n        \n      \n    \n\n    \n      \n        🎬\n        \n          Netflix\n          Segments users by watch behavior — binge watchers, casual viewers, movie lovers — to personalize thumbnails and recommendations per profile.\n          ↑ Reduces churn by keeping each segment engaged differently\n        \n      \n      \n        🚗\n        \n          Uber\n          Identifies rider archetypes from trip frequency, timing, and spend — then sends targeted promos: discounts to casuals, subscriptions to commuters.\n          ↑ Today's example — let's see how K-means builds these segments"
-  },
-  {
-    "objectID": "projects/project1/6.html#section-2",
-    "href": "projects/project1/6.html#section-2",
-    "title": "Jihee Yoon",
-    "section": "",
-    "text": "Segmentation at Uber\n  Example: What do Uber's segments look like?\n  Clusters are just math — profiling gives them meaning the business can act on\n  \n\n    \n      Cluster A\n      🚗\n      Weekend Riders\n      \n        Trips / month3–4\n        Peak timeFri–Sat night\n        Price sensitivityHigh\n        Eats usageRare\n        LTVLow–Medium\n      \n      \n        \n        Activate with discount codes\n      \n    \n\n    \n      Cluster B\n      💼\n      Daily Commuters\n      \n        Trips / month20–22\n        Peak timeMon–Fri 8am/6pm\n        Price sensitivityLow\n        Eats usageModerate\n        LTVHigh\n      \n      \n        \n        Lock in with Uber One subscription\n      \n    \n\n    \n      Cluster C\n      🍔\n      Eats Power Users\n      \n        Orders / month16–20\n        Peak timeLunch & dinner daily\n        Price sensitivityMedium\n        Rides usageOccasional\n        LTVVery High\n      \n      \n        \n        Reward & retain with loyalty perks"
-  },
-  {
-    "objectID": "projects/project1/6.html#section-3",
-    "href": "projects/project1/6.html#section-3",
-    "title": "Jihee Yoon",
-    "section": "",
-    "text": "K-Medoids (PAM)\n    A more robustalternative\n    \n      Unlike K-Means, the center must be a real data point — not an average. More robust to outliers.\n    \n    \n      \n        1\n        Pick medoidsChoose K actual data points as centers\n      \n      \n        2\n        Assign pointsEach point → nearest medoid\n      \n      \n        3\n        Swap medoidsTry each non-medoid as a replacement; keep if cost decreases\n      \n      \n        4\n        RepeatUntil no swap improves the solution\n      \n    \n  \n  \n    \n    \n      Next Step ▶\n      Reset"
-  },
-  {
-    "objectID": "projects/project1/6.html#section-4",
-    "href": "projects/project1/6.html#section-4",
+    "objectID": "projects/project1/uber_segmentation.html#section-4",
+    "href": "projects/project1/uber_segmentation.html#section-4",
     "title": "Jihee Yoon",
     "section": "",
     "text": "Segmentation → Action\n  Different segments, different strategies\n  Segmentation is only valuable when it changes decisions.\n  \n\n    \n      CLUSTER A · WEEKEND RIDERS\n      Activate with discounts\n      \n      \n        →$5 off Friday night push notification\n        →Referral bonus to grow the casual base\n        →Retarget on Instagram / TikTok\n      \n    \n\n    \n      CLUSTER B · DAILY COMMUTERS\n      Lock in with subscriptions\n      \n      \n        →Uber One free trial targeting\n        →Reserved rides for predictable routes\n        →Priority pickup as loyalty perk\n      \n    \n\n    \n      CLUSTER C · EATS POWER USERS\n      Reward and retain\n      \n      \n        →Free delivery on 10th order\n        →Exclusive restaurant early access\n        →Upsell to rides via in-app cross-promo"

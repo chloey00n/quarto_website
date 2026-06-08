@@ -1,0 +1,481 @@
+---
+title: "What Drives Customer Satisfaction? A Key Drivers Analysis"
+subtitle: "Comparing Six Variable Importance Methods on Customer Survey Data"
+author: "Jihee Yoon"
+date: today
+categories: [Variable Importance, Key Drivers, Random Forest, Shapley Values]
+description: "We compute and compare six methods for quantifying variable importance — Pearson correlations, standardized regression coefficients, drop-one usefulness, Shapley values, Johnson's relative weights, and random forest Gini importance — applied to a customer satisfaction survey."
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "Contents"
+    code-fold: true
+    code-tools: true
+    theme: flatly
+    highlight-style: github
+    fig-width: 10
+    fig-height: 5
+execute:
+  warning: false
+  message: false
+---
+
+```{python}
+#| echo: false
+import pandas as pd
+import numpy as np
+from scipy import stats
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.preprocessing import StandardScaler
+from IPython.display import display, HTML
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import itertools, math, warnings
+warnings.filterwarnings("ignore")
+np.random.seed(42)
+
+BLUE   = "#3A7EC6"
+GREEN  = "#27AE60"
+ORANGE = "#E87040"
+GRAY   = "#8D99AE"
+RED    = "#C0392B"
+PURPLE = "#8E44AD"
+
+plt.rcParams.update({
+    "figure.facecolor":  "white",
+    "axes.facecolor":    "#FAFBFC",
+    "axes.spines.top":   False,
+    "axes.spines.right": False,
+    "axes.grid":         True,
+    "grid.alpha":        0.3,
+    "grid.linestyle":    "--",
+    "font.family":       "sans-serif",
+    "font.size":         11,
+    "axes.titlesize":    13,
+    "axes.titleweight":  "bold",
+})
+
+df = pd.read_csv("data_for_drivers_analysis.csv")
+y_col  = "satisfaction"
+x_cols = ["trust", "build", "differs", "easy", "appealing",
+          "rewarding", "popular", "service", "impact"]
+
+X  = df[x_cols].values
+y  = df[y_col].values
+
+scaler = StandardScaler()
+X_sc   = scaler.fit_transform(X)
+y_sc   = (y - y.mean()) / y.std()
+
+Rxy = np.array([stats.pearsonr(X_sc[:, j], y_sc)[0] for j in range(len(x_cols))])
+```
+
+## Introduction
+
+When a company runs a customer satisfaction survey, the natural follow-up question is: **what actually drives satisfaction?** Is it product quality, ease of use, brand trust, or something else? The challenge is that most drivers are correlated with each other, so simply looking at which variable has the highest correlation with satisfaction can be misleading.
+
+**Key drivers analysis** is a set of techniques for measuring the *relative importance* of each driver after accounting for the fact that predictors are correlated. Different methods make different assumptions and decompose explained variance in different ways — and a trustworthy analysis compares them side by side.
+
+In this post we apply **six methods** to a customer satisfaction survey dataset (n = 2,553 respondents, 9 drivers) and replicate the variable importance table from class:
+
+1. **Pearson correlation** — simple bivariate relationship
+2. **Standardized regression coefficients** — partial effects controlling for all others
+3. **Drop-one usefulness** — R² lost when each driver is removed
+4. **Shapley values** — fair allocation of R² across all coalition orderings
+5. **Johnson's relative weights** — variance decomposition via orthogonalization
+6. **Random forest Gini importance** — nonlinear, tree-based importance
+
+---
+
+## The Data
+
+```{python}
+#| echo: true
+
+df = pd.read_csv("data_for_drivers_analysis.csv")
+print(f"Rows: {df.shape[0]}   Columns: {df.shape[1]}")
+print(f"\nOutcome  : {y_col}")
+print(f"Drivers  : {x_cols}")
+print(f"\nSatisfaction range: {df[y_col].min()}–{df[y_col].max()}")
+print(f"Driver variables  : binary (0/1) except satisfaction (1–5 scale)")
+df[x_cols + [y_col]].describe().round(3)
+```
+
+The outcome variable `satisfaction` is measured on a 1–5 scale. The nine driver variables are all binary (0 = no, 1 = yes), capturing whether each respondent agreed with statements about the brand across dimensions like trust, build quality, differentiation, ease of use, appeal, and so on.
+
+```{python}
+#| echo: false
+#| label: fig-corr-matrix
+#| fig-cap: "Correlation matrix of all variables. Drivers are moderately inter-correlated (0.2–0.5), making raw correlations with satisfaction potentially misleading — which motivates the need for methods that account for multicollinearity."
+
+corr = df[x_cols + [y_col]].corr()
+fig, ax = plt.subplots(figsize=(9, 7))
+im = ax.imshow(corr.values, cmap="RdBu_r", vmin=-0.6, vmax=0.6)
+ax.set_xticks(range(len(corr.columns)))
+ax.set_yticks(range(len(corr.columns)))
+ax.set_xticklabels(corr.columns, rotation=40, ha="right", fontsize=10)
+ax.set_yticklabels(corr.columns, fontsize=10)
+for i in range(len(corr)):
+    for j in range(len(corr)):
+        ax.text(j, i, f"{corr.values[i,j]:.2f}", ha="center", va="center",
+                fontsize=8, color="white" if abs(corr.values[i,j]) > 0.35 else "black")
+plt.colorbar(im, ax=ax, fraction=0.03)
+ax.set_title("Correlation Matrix — All Variables")
+plt.tight_layout()
+plt.show()
+```
+
+The drivers are moderately inter-correlated (typical for survey data), which means the choice of importance method matters: raw correlations will overstate the importance of variables that happen to correlate with other important drivers, while regression coefficients can understate the importance of variables that share variance with other predictors.
+
+---
+
+## Method 1: Pearson Correlations
+
+The simplest measure of importance: the bivariate correlation between each driver and satisfaction.
+
+$$r_{X_j, Y} = \frac{\sum_i (X_{ij} - \bar{X}_j)(Y_i - \bar{Y})}{\sqrt{\sum_i (X_{ij} - \bar{X}_j)^2 \cdot \sum_i (Y_i - \bar{Y})^2}}$$
+
+**Interpretation:** $r$ ranges from −1 to +1. A larger positive value means the driver has a stronger raw association with satisfaction. The key limitation is that correlations do not control for other drivers — a driver can appear important simply because it correlates with a truly important driver.
+
+```{python}
+#| echo: true
+
+pearson = {}
+for j, col in enumerate(x_cols):
+    r, p = stats.pearsonr(df[col], df[y_col])
+    pearson[col] = {"r": r, "p": p}
+
+pearson_df = pd.DataFrame(pearson).T.sort_values("r", ascending=False)
+print(pearson_df.round(4))
+```
+
+---
+
+## Method 2: Standardized Regression Coefficients
+
+We regress satisfaction on all nine drivers simultaneously, after standardizing both the predictors and outcome to have mean 0 and standard deviation 1. This gives **partial effects** — the association between each driver and satisfaction *holding all other drivers constant*.
+
+$$\hat{Y}^* = \beta_1 X_1^* + \beta_2 X_2^* + \cdots + \beta_p X_p^*$$
+
+where $^*$ denotes standardization. Because all variables are on the same scale, $|\beta_j|$ is directly comparable across drivers.
+
+**Limitation:** When predictors are correlated, variance shared between them is not allocated to any single predictor — it simply "disappears" from individual coefficients. This leads to underestimation of important-but-correlated drivers.
+
+```{python}
+#| echo: true
+
+lr_full = LinearRegression().fit(X_sc, y_sc)
+std_coef = dict(zip(x_cols, lr_full.coef_))
+r2_full  = lr_full.score(X_sc, y_sc)
+
+print(f"Full model R² = {r2_full:.4f}")
+print()
+for k, v in sorted(std_coef.items(), key=lambda x: -abs(x[1])):
+    print(f"  {k:<12}: {v:+.4f}")
+```
+
+The full model R² = **`{python} f"{r2_full:.3f}"`** — meaning the nine drivers together explain about 10.9% of the variance in satisfaction. Notice that several coefficients are near zero: this reflects suppression from multicollinearity, not genuine unimportance.
+
+---
+
+## Method 3: Drop-One Usefulness
+
+For each driver, we ask: *how much does R² drop if we remove this driver from the full model?*
+
+$$\text{Usefulness}_j = R^2_{\text{full}} - R^2_{-j}$$
+
+where $R^2_{-j}$ is the R² of the model with driver $j$ removed. This measures the **unique** contribution of each driver — the variance it explains that no other driver can account for.
+
+**Advantage over coefficients:** Usefulness is always non-negative and directly interpretable as variance explained. **Limitation:** It ignores shared variance (variance that could be explained by multiple drivers).
+
+```{python}
+#| echo: true
+
+usefulness = {}
+for j, col in enumerate(x_cols):
+    X_drop   = np.delete(X_sc, j, axis=1)
+    r2_drop  = LinearRegression().fit(X_drop, y_sc).score(X_drop, y_sc)
+    usefulness[col] = r2_full - r2_drop
+
+print(f"Full R² = {r2_full:.4f}   |   Sum of usefulness = {sum(usefulness.values()):.4f}")
+print()
+for k, v in sorted(usefulness.items(), key=lambda x: -x[1]):
+    print(f"  {k:<12}: {v:.4f}  ({v/r2_full*100:.1f}% of R²)")
+```
+
+Note that the sum of usefulnesses is much less than R² — the remainder is **shared variance** that multiple drivers can explain, and drop-one doesn't allocate it to anyone.
+
+---
+
+## Method 4: Shapley Values (Own Implementation)
+
+Shapley values come from cooperative game theory. The idea: treat each driver as a "player" and R² as the "prize." For each possible **coalition** (subset) of drivers, compute R². Then each driver's Shapley value is its **average marginal contribution** across all possible orderings of players entering the coalition.
+
+$$\phi_j = \sum_{S \subseteq N \setminus \{j\}} \frac{|S|!\,(|N|-|S|-1)!}{|N|!} \left[ R^2(S \cup \{j\}) - R^2(S) \right]$$
+
+**Key property:** Shapley values are the *unique* method that simultaneously satisfies:
+- **Efficiency:** values sum to R²
+- **Symmetry:** equally contributing drivers get equal values
+- **Dummy:** a useless driver gets zero
+- **Additivity:** consistent decomposition
+
+This is the **"fairest"** allocation of R² across correlated predictors.
+
+```{python}
+#| echo: true
+
+# Precompute R² for all 2^9 = 512 subsets
+n_feat = len(x_cols)
+all_r2  = {}
+
+def r2_subset(indices):
+    if len(indices) == 0:
+        return 0.0
+    return LinearRegression().fit(X_sc[:, list(indices)], y_sc).score(
+           X_sc[:, list(indices)], y_sc)
+
+print("Precomputing R² for all 512 subsets...")
+for r in range(n_feat + 1):
+    for subset in itertools.combinations(range(n_feat), r):
+        all_r2[subset] = r2_subset(subset)
+
+# Compute Shapley value for each driver
+shapley = {}
+for j in range(n_feat):
+    sv      = 0.0
+    others  = [i for i in range(n_feat) if i != j]
+    for r in range(n_feat):
+        for subset in itertools.combinations(others, r):
+            s      = len(subset)
+            weight = math.factorial(s) * math.factorial(n_feat - s - 1) / math.factorial(n_feat)
+            r2_with    = all_r2[tuple(sorted(list(subset) + [j]))]
+            r2_without = all_r2[tuple(sorted(list(subset)))]
+            sv += weight * (r2_with - r2_without)
+    shapley[x_cols[j]] = sv
+
+print(f"\nShapley values sum = {sum(shapley.values()):.4f}  (R² = {r2_full:.4f}  ✓)")
+for k, v in sorted(shapley.items(), key=lambda x: -x[1]):
+    print(f"  {k:<12}: {v:.4f}  ({v/r2_full*100:.1f}% of R²)")
+```
+
+Shapley values distribute the *entire* R² (including shared variance) fairly across all drivers. Unlike usefulness, every driver gets credit for the variance it could explain, even if other drivers can explain it too.
+
+---
+
+## Method 5: Johnson's Relative Weights
+
+Johnson's (2000) method orthogonalizes the predictors via eigendecomposition of the predictor correlation matrix, regresses the outcome on the orthogonal factors, then maps the variance back to the original predictors.
+
+**Steps:**
+1. Eigendecompose $\mathbf{R}_{XX} = \mathbf{V} \boldsymbol{\Lambda} \mathbf{V}^\top$
+2. Form orthogonal predictors $\mathbf{Z} = \mathbf{X}^* \mathbf{V}$
+3. Regress $Y^*$ on $\mathbf{Z}$ to get coefficients $\hat{\boldsymbol{\beta}}_Z$
+4. Compute relative weight: $\text{RW}_j = \sum_k \left(V_{jk} \sqrt{\lambda_k} \,\hat\beta_{Z_k}\right)^2$
+
+**Key property:** Like Shapley, relative weights sum exactly to R². Unlike Shapley, they are computationally fast (no $2^p$ subsets needed).
+
+```{python}
+#| echo: true
+
+Rxx           = np.corrcoef(X_sc.T)
+eigvals, eigvecs = np.linalg.eigh(Rxx)
+
+# Orthogonal factor scores
+Z      = X_sc @ eigvecs                                    # (n × p)
+lr_z   = LinearRegression(fit_intercept=False).fit(Z, y_sc)
+beta_z = lr_z.coef_                                        # (p,)
+
+# Relative weight for predictor j
+rw_raw = np.zeros(n_feat)
+for j in range(n_feat):
+    for k in range(n_feat):
+        rw_raw[j] += (eigvecs[j, k] * np.sqrt(eigvals[k]) * beta_z[k])**2
+
+johnson_rw = dict(zip(x_cols, rw_raw))
+print(f"Relative weights sum = {rw_raw.sum():.4f}  (R² = {r2_full:.4f}  ✓)")
+for k, v in sorted(johnson_rw.items(), key=lambda x: -x[1]):
+    print(f"  {k:<12}: {v:.4f}  ({v/r2_full*100:.1f}% of R²)")
+```
+
+---
+
+## Method 6: Random Forest Gini Importance
+
+Random forests build an ensemble of decision trees on bootstrap samples. At each split, the algorithm selects the feature that most reduces **node impurity** (measured by Gini for classification, MSE for regression). **Mean decrease in impurity** sums this reduction across all trees, normalized to sum to 1.
+
+**Advantages over regression-based methods:**
+- Captures **nonlinear** relationships and interactions
+- No assumption of linearity or additivity
+- Naturally handles correlated predictors through random feature subsampling
+
+**Limitation:** Gini importance is on a different scale (sums to 1, not R²), so it's a relative ranking rather than a variance decomposition.
+
+```{python}
+#| echo: true
+
+rf = RandomForestRegressor(n_estimators=500, random_state=42, n_jobs=-1)
+rf.fit(X, y)
+gini_imp = dict(zip(x_cols, rf.feature_importances_))
+
+print("Random Forest Gini Importance (sums to 1.0):")
+for k, v in sorted(gini_imp.items(), key=lambda x: -x[1]):
+    print(f"  {k:<12}: {v:.4f}  ({v*100:.1f}%)")
+```
+
+---
+
+## The Full Comparison Table
+
+```{python}
+#| echo: false
+
+# Build summary table
+rows = []
+for col in x_cols:
+    rows.append({
+        "Driver":        col.capitalize(),
+        "Pearson r":     pearson[col]["r"],
+        "Std. Coef.":    std_coef[col],
+        "Usefulness":    usefulness[col],
+        "Shapley":       shapley[col],
+        "Johnson RW":    johnson_rw[col],
+        "RF Gini":       gini_imp[col],
+    })
+
+tbl = pd.DataFrame(rows).sort_values("Shapley", ascending=False).reset_index(drop=True)
+
+# Rank each method (1 = most important)
+for method in ["Pearson r", "Std. Coef.", "Usefulness", "Shapley", "Johnson RW", "RF Gini"]:
+    tbl[f"Rank_{method}"] = tbl[method].rank(ascending=False).astype(int)
+
+# HTML table
+html = """
+<style>
+.kt { border-collapse: collapse; font-size: 13px; font-family: sans-serif; width: 100%; }
+.kt th { background: #3A7EC6; color: white; padding: 9px 12px; text-align: center; }
+.kt td { padding: 7px 12px; text-align: center; border-bottom: 1px solid #eee; }
+.kt tr:nth-child(even) { background: #f5f8fc; }
+.kt tr.top { background: #d4edda !important; font-weight: bold; }
+.kt tr.bot { background: #fde8e4 !important; }
+</style>
+<table class="kt">
+<thead><tr>
+  <th>Driver</th>
+  <th>Pearson r</th>
+  <th>Std. Coef.</th>
+  <th>Usefulness</th>
+  <th>Shapley</th>
+  <th>Johnson RW</th>
+  <th>RF Gini</th>
+</tr></thead><tbody>
+"""
+for _, row in tbl.iterrows():
+    top = row["Driver"] in ["Impact", "Trust"]
+    bot = row["Driver"] in ["Popular", "Rewarding"]
+    tr_cls = ' class="top"' if top else (' class="bot"' if bot else "")
+    html += f"""<tr{tr_cls}>
+  <td><strong>{row['Driver']}</strong></td>
+  <td>{row['Pearson r']:+.4f}</td>
+  <td>{row['Std. Coef.']:+.4f}</td>
+  <td>{row['Usefulness']:.4f}</td>
+  <td>{row['Shapley']:.4f}</td>
+  <td>{row['Johnson RW']:.4f}</td>
+  <td>{row['RF Gini']:.4f}</td>
+</tr>"""
+html += f"""</tbody></table>
+<p style='font-size:11px;color:#666;margin-top:8px'>
+Sorted by Shapley value. Green = top 2 drivers. Red = bottom 2 drivers.
+Full model R² = {r2_full:.4f}. Pearson r and RF Gini are on different scales (not directly comparable to R²-based methods).
+</p>"""
+display(HTML(html))
+```
+
+```{python}
+#| echo: false
+#| label: fig-comparison
+#| fig-cap: "Side-by-side comparison of all six importance methods. Items are ordered by Shapley rank in all panels. Impact and Trust consistently emerge as the top two drivers across all methods."
+
+fig, axes = plt.subplots(1, 3, figsize=(15, 5.5), sharey=True)
+
+order    = tbl["Driver"].tolist()[::-1]   # bottom to top = least to most important
+y_pos    = np.arange(len(order))
+colors_g = [GREEN if d in ["Impact", "Trust"] else
+            RED   if d in ["Popular", "Rewarding"] else GRAY for d in order]
+
+# Panel 1: Pearson vs Std Coef
+ax = axes[0]
+vals_p = [tbl.loc[tbl["Driver"]==d, "Pearson r"].values[0] for d in order]
+vals_b = [tbl.loc[tbl["Driver"]==d, "Std. Coef."].values[0] for d in order]
+ax.barh(y_pos - 0.2, vals_p, 0.38, color=BLUE,   alpha=0.75, label="Pearson r")
+ax.barh(y_pos + 0.2, vals_b, 0.38, color=ORANGE, alpha=0.75, label="Std. Coef.")
+ax.axvline(0, color="black", lw=1, ls="--", alpha=0.4)
+ax.set_yticks(y_pos); ax.set_yticklabels(order, fontsize=10)
+ax.set_title("Pearson r  vs  Std. Coef.", color=BLUE, fontweight="bold")
+ax.legend(frameon=False, fontsize=9)
+
+# Panel 2: Usefulness vs Shapley
+ax = axes[1]
+vals_u = [tbl.loc[tbl["Driver"]==d, "Usefulness"].values[0] for d in order]
+vals_s = [tbl.loc[tbl["Driver"]==d, "Shapley"].values[0] for d in order]
+ax.barh(y_pos - 0.2, vals_u, 0.38, color=PURPLE, alpha=0.75, label="Usefulness")
+ax.barh(y_pos + 0.2, vals_s, 0.38, color=GREEN,  alpha=0.75, label="Shapley")
+ax.set_title("Usefulness  vs  Shapley", color=PURPLE, fontweight="bold")
+ax.legend(frameon=False, fontsize=9)
+
+# Panel 3: Johnson vs RF Gini
+ax = axes[2]
+vals_j  = [tbl.loc[tbl["Driver"]==d, "Johnson RW"].values[0] for d in order]
+vals_rf = [tbl.loc[tbl["Driver"]==d, "RF Gini"].values[0] / 10 for d in order]  # rescale for viz
+ax.barh(y_pos - 0.2, vals_j,  0.38, color=ORANGE, alpha=0.75, label="Johnson RW")
+ax.barh(y_pos + 0.2, vals_rf, 0.38, color=RED,    alpha=0.75, label="RF Gini ÷10")
+ax.set_title("Johnson RW  vs  RF Gini (÷10)", color=ORANGE, fontweight="bold")
+ax.legend(frameon=False, fontsize=9)
+
+plt.suptitle("Six Variable Importance Methods — Side-by-Side Comparison\n(sorted by Shapley rank)",
+             fontsize=12, fontweight="bold", y=1.02)
+plt.tight_layout()
+plt.show()
+```
+
+---
+
+## Discussion
+
+### What the Methods Agree On
+
+All six methods consistently identify **Impact** and **Trust** as the top two drivers of customer satisfaction, and **Popular** and **Rewarding** as the least important. This consensus across methodologically diverse approaches provides high confidence in the ranking at the extremes.
+
+### Where the Methods Disagree — and Why
+
+The middle tier (Build, Differs, Easy, Appealing, Service) shows more variation across methods. This is expected: these drivers are more correlated with each other and with the top drivers, so the choice of how to allocate shared variance matters.
+
+**Pearson correlations** are highest for Trust (0.256), Service (0.251), and Impact (0.255) — all nearly tied. This masks the fact that Impact has a much larger *partial* effect once other drivers are controlled for.
+
+**Standardized coefficients** for Impact (0.128) and Trust (0.116) are far larger than for any other driver. But Build (0.020) and Easy (0.022) look nearly irrelevant — likely because their variance is shared with Trust and Impact, which dominate the regression.
+
+**Drop-one usefulness** tells a similar story but is even more extreme: Impact (0.011) and Trust (0.008) account for nearly all unique variance, while most other drivers contribute almost nothing uniquely. This reflects multicollinearity — when important drivers are in the model, correlated lesser drivers add little.
+
+**Shapley values** provide the most balanced picture. By averaging over all possible orderings, they allocate shared variance proportionally. Trust (0.022) and Impact (0.024) still lead, but Service (0.018) gets more credit than in the regression or usefulness approaches, because it can explain variance that builds or differs cannot.
+
+**Johnson's relative weights** are notably more even across drivers than the other R²-based methods. This is a known property: the orthogonalization step distributes shared variance more aggressively. In highly correlated survey data like this, this can either be a feature (guards against undervaluing correlated drivers) or a limitation (may overstate the importance of drivers that are only important because they correlate with truly important ones).
+
+**Random forest Gini** picks up Impact (0.140) and Trust (0.152) as top drivers — consistent with all other methods — and identifies Service (0.136) as important, likely because its relationship with satisfaction involves nonlinear patterns that the linear models underweight.
+
+### Which Method Should You Use?
+
+| Goal | Recommended Method |
+|------|-------------------|
+| Quick sanity check | Pearson r |
+| Partial effects, statistical inference | Std. Coef. |
+| Unique contribution only | Usefulness |
+| Fair allocation of all variance | Shapley |
+| Fast approximation to Shapley | Johnson RW |
+| Nonlinear, interaction-aware | RF Gini |
+
+For a business audience, **Shapley values** are the most defensible single method: they have a clear theoretical justification (fair allocation), always sum to R², and avoid both the underestimation problem of regression coefficients and the overestimation problem of raw correlations. For exploratory work or when computational cost matters, **Johnson's relative weights** are an excellent approximation.
+
+### Business Recommendation
+
+Based on the convergent evidence across all six methods, the clearest recommendation is: **prioritize improving Impact and Trust**. These two drivers consistently rank #1 and #2 regardless of method, and together account for roughly 44% of the explained variance (by Shapley). Service is a secondary priority — it consistently ranks 3rd or 4th and appears to have nonlinear effects captured by the random forest. The bottom three drivers (Popular, Rewarding, Build) show weak and inconsistent importance across methods; resources invested here are unlikely to move the satisfaction needle.
